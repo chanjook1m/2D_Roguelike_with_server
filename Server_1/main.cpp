@@ -25,7 +25,7 @@ int main()
 
 	while (!done)
 	{
-		if (selector.wait(sf::seconds(2.0f)))
+		if (selector.wait(sf::seconds(0.09f)))
 		{
 			if (selector.isReady(listener))
 			{

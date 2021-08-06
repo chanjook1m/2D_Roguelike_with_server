@@ -55,11 +55,15 @@ namespace net
 		int temp_projectile_x = collisionRect_x;
 		int temp_projectile_y = collisionRect_y;
 
-		int lifetime = 100;
+		int lifetime = 30;
 		int lifetimeCounter = 0;
+
+		bool projectileAlive = false;
 
 		bool updated = false;
 		bool shooted = false;
+		bool moved = false;
+		int projectileDirection;
 		void update()
 		{
 			move();
@@ -68,42 +72,59 @@ namespace net
 
 		void projectileUpdate()
 		{
-			if (direction == 1)
+			if (moved && projectileAlive == false)
 			{
-				projectile_x = temp_projectile_x;
-				projectile_y = temp_projectile_y - velocity;
-				temp_projectile_y = projectile_y;
+				temp_projectile_x = collisionRect_x;
+				temp_projectile_y = collisionRect_y;
 			}
 
-			if (direction == 2 || direction == 0)
+			if (projectileAlive)
 			{
-				projectile_x = temp_projectile_x;
-				projectile_y = temp_projectile_y + velocity;
-				temp_projectile_y = projectile_y;
-			}
+				if (lifetimeCounter == 0)
+				{
+					projectileDirection = direction;
+				}
 
-			if (direction == 3)
-			{
-				projectile_y = temp_projectile_y;
-				projectile_x = temp_projectile_x - velocity;
-				temp_projectile_x = projectile_x;
+				if (projectileDirection == 1)
+				{
+					projectile_x = temp_projectile_x;
+					projectile_y = temp_projectile_y - velocity;
+					temp_projectile_y = projectile_y;
+				}
 
-			}
+				if (projectileDirection == 2 || projectileDirection == 0)
+				{
+					projectile_x = temp_projectile_x;
+					projectile_y = temp_projectile_y + velocity;
+					temp_projectile_y = projectile_y;
+				}
 
-			if (direction == 4)
-			{
-				projectile_y = temp_projectile_y;
-				projectile_x = temp_projectile_x + velocity;
-				temp_projectile_x = projectile_x;
-			}
+				if (projectileDirection == 3)
+				{
+					projectile_y = temp_projectile_y;
+					projectile_x = temp_projectile_x - velocity;
+					temp_projectile_x = projectile_x;
 
-			lifetimeCounter++;
+				}
 
-			if (lifetimeCounter >= lifetime)
-			{
-				lifetimeCounter = 0;
-				isAlive = false;
-				shooted = false;
+				if (projectileDirection == 4)
+				{
+					projectile_y = temp_projectile_y;
+					projectile_x = temp_projectile_x + velocity;
+					temp_projectile_x = projectile_x;
+				}
+
+				lifetimeCounter++;
+
+				if (lifetimeCounter >= lifetime)
+				{
+					lifetimeCounter = 0;
+					projectileAlive = false;
+					shooted = false;
+					temp_projectile_x = collisionRect_x;
+					temp_projectile_y = collisionRect_y;
+
+				}
 			}
 		}
 
@@ -119,7 +140,7 @@ namespace net
 				temp_y = collisionRect_y;
 				std::cout << collisionRect.getPosition().y << std::endl;
 				std::cout << collisionRect_y << std::endl;
-
+				moved = true;
 			}
 			else if (direction == 2 && canMoveDown)
 			{
@@ -131,6 +152,7 @@ namespace net
 				temp_y = collisionRect_y;
 				std::cout << collisionRect.getPosition().y << std::endl;
 				std::cout << collisionRect_y << std::endl;
+				moved = true;
 			}
 			else if (direction == 3 && canMoveLeft)
 			{
@@ -140,6 +162,7 @@ namespace net
 				collisionRect_y = temp_y;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
+				moved = true;
 			}
 			else if (direction == 4 && canMoveRight)
 			{
@@ -149,6 +172,7 @@ namespace net
 				collisionRect_y = temp_y;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
+				moved = true;
 			}
 			else
 			{
@@ -156,20 +180,22 @@ namespace net
 				canMoveDown = true;
 				canMoveLeft = true;
 				canMoveRight = true;
+				collisionRect_x = temp_x;
+				collisionRect_y = temp_y;
+				moved = false;
 			}
-
 			//direction = 0;
 		}
 	};
 
 	sf::Packet& operator <<(sf::Packet& packet, const Player& m)
 	{
-		return packet << m.id << m.velocity << m.attackDamage << m.direction << m.x << m.y << m.hp << m.powerUpLevel << m.canMoveUp << m.canMoveDown << m.canMoveLeft << m.canMoveRight << m.isAlive << m.collisionRect_x << m.collisionRect_y << m.projectile_x << m.projectile_y << m.shooted;
+		return packet << m.id << m.velocity << m.attackDamage << m.direction << m.x << m.y << m.hp << m.powerUpLevel << m.canMoveUp << m.canMoveDown << m.canMoveLeft << m.canMoveRight << m.isAlive << m.collisionRect_x << m.collisionRect_y << m.projectile_x << m.projectile_y << m.shooted << m.projectileAlive;
 	}
 
 	sf::Packet& operator >>(sf::Packet& packet, Player& m)
 	{
 
-		return packet >> m.id >> m.velocity >> m.attackDamage >> m.direction >> m.x >> m.y >> m.hp >> m.powerUpLevel >> m.canMoveUp >> m.canMoveDown >> m.canMoveLeft >> m.canMoveRight >> m.isAlive >> m.collisionRect_x >> m.collisionRect_y >> m.projectile_x >> m.projectile_y >> m.shooted;
+		return packet >> m.id >> m.velocity >> m.attackDamage >> m.direction >> m.x >> m.y >> m.hp >> m.powerUpLevel >> m.canMoveUp >> m.canMoveDown >> m.canMoveLeft >> m.canMoveRight >> m.isAlive >> m.collisionRect_x >> m.collisionRect_y >> m.projectile_x >> m.projectile_y >> m.shooted >> m.projectileAlive;
 	}
 }

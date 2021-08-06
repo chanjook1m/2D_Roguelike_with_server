@@ -29,6 +29,7 @@ public:
 	bool shooted = false;
 	int projectile_x = collisionRect_x;
 	int projectile_y = collisionRect_y;
+	bool projectileAlive = false;
 	Player(int width, int height);
 	~Player();
 

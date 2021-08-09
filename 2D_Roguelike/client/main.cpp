@@ -11,6 +11,7 @@
 #include "item.h"
 #include "wall.h"
 #include "animatedGIF.h"
+#include "client_interface.hpp"
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
 using namespace std;
 
@@ -34,42 +35,29 @@ int main()
 {
     int counter;
     int counter2;
-
-    //
-    sf::IpAddress ip = sf::IpAddress::getLocalAddress();
-    std::string sIp = ip.toString();
-    sf::TcpSocket socket;
-    //socket.setBlocking(false);
     bool done = false;
-    std::string id = "111";
-
-    //std::cout << "Enter your id: ";
-    //std::getline(std::cin, id);
-    ////std::cin >> id;
-    socket.connect(ip, 5555);
-    std::vector<sf::Text> chat;
-    sf::Packet packet;
-
-    packet << id;
-    socket.send(packet);
     
     std::vector <Player> enemies;
     Player player1(24, 32);
     player1.isMainPlayer = true;
-    
-    if (socket.receive(packet) == sf::Socket::Done)
-    {
-        if (packet.getDataSize() > 0)
-        {
-            if (packet >> player1)
-            {
-                std::cout << "Player ID: " << player1.id << std::endl;
-                player1.collisionRect.setPosition(player1.collisionRect_x, player1.collisionRect_y);
-            }
-        }
-    }
-    socket.setBlocking(false);
 
+    // client
+    static int request_id = 1;
+
+    
+    net::AsyncTCPClient client;
+
+    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 0);
+
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    std::cout << "status: " << (net::connected ? "connected" : "not connected") << std::endl;
+    if (net::connected)
+        player1.id = net::id;
+    
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+
+    //client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
     //
     sf::RenderWindow window(sf::VideoMode(1000, 800), "My RPG");
     window.setFramerateLimit(60);
@@ -425,111 +413,127 @@ int main()
     // run the program as long as the window is open
     bool enemyUpdate = false;
     bool update = false;
+    Player enem(24, 32);
     while (window.isOpen())
     {
-        // receive update game packet
-        sf::Packet updatePacket;
-        sf::Socket::Status status = socket.receive(updatePacket);
-        if (status == sf::Socket::Done)
+        //// receive update game packet
+        client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+
+        std::cout << "ID : " << player1.id << std::endl;
+        for (int i = 0; i < net::players.size(); i++)
         {
-            //std::cout << " Done" << std::endl;
-            if (updatePacket.getDataSize() > 0)
+            std::cout << "ID2 : " << net::players[i].id << std::endl;
+            if (net::players[i].id == player1.id)
             {
-                Player player(24, 32);
-                Player enem(24, 32);
-                updatePacket >> player;
-                
-                std::cout << player.id << " and " << player1.id << std::endl;
-                //std::cout << player.collisionRect_x << " and " << player.collisionRect_y << std::endl;
-                if (player.id == player1.id)
+               // std::cout << "--------------player update "<< net::players[i].collisionRect_x << " : " << net::players[i].collisionRect_y << std::endl;
+                //std::cout << "pla up" << std::endl;
+                player1.hp = net::players[i].hp;
+                player1.x = net::players[i].x;
+                player1.y = net::players[i].y;
+                player1.powerUpLevel = net::players[i].powerUpLevel;
+                player1.direction = net::players[i].direction;
+                player1.score = net::players[i].score;
+                player1.canMoveUp = net::players[i].canMoveUp;
+                player1.canMoveDown = net::players[i].canMoveDown;
+                player1.canMoveLeft = net::players[i].canMoveLeft;
+                player1.canMoveRight = net::players[i].canMoveRight;
+                player1.projectile_x = net::players[i].projectile_x;
+                player1.projectile_y = net::players[i].projectile_y;
+                player1.projectileAlive = net::players[i].projectileAlive;
+                player1.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
+                player1.sprite.setPosition(player1.collisionRect.getPosition());
+            }
+            else
+            {
+                for (size_t j = 0; j < enemies.size(); j++)
                 {
-                    std::cout << "player update" << std::endl;
-                    player1.hp = player.hp;
-                    player1.x = player.x;
-                    player1.y = player.y;
-                    player1.powerUpLevel = player.powerUpLevel;
-                    player1.direction = player.direction;
-                    player1.score = player.score;
-                    player1.canMoveUp = player.canMoveUp;
-                    player1.canMoveDown = player.canMoveDown;
-                    player1.canMoveLeft = player.canMoveLeft;
-                    player1.canMoveRight = player.canMoveRight;
-                    player1.projectile_x = player.projectile_x;
-                    player1.projectile_y = player.projectile_y;
-                    player1.projectileAlive = player.projectileAlive;
-                    player1.collisionRect.setPosition(player.collisionRect_x, player.collisionRect_y);
-                    player1.sprite.setPosition(player1.collisionRect.getPosition());
-
-                    
-                }
-                else
-                {
-                    for (size_t i = 0; i < enemies.size(); i++)
+                    std::cout << "enem id : " << enemies[j].id << std::endl;
+                    std::cout << "enem size : " << enemies.size() << std::endl;
+                    if (enemies[j].id == net::players[i].id)
                     {
-                        if (enemies[i].id == player.id)
+                        std::cout << "enemy update - " << net::players[i].direction << std::endl;
+                        enemies[j].id = net::players[i].id;
+                        enemies[j].hp = net::players[i].hp;
+                        enemies[j].x = net::players[i].x;
+                        enemies[j].y = net::players[i].y;
+                        enemies[j].powerUpLevel = net::players[i].powerUpLevel;
+                        enemies[j].direction = net::players[i].direction;
+                        enemies[j].score = net::players[i].score;
+                        enemies[j].canMoveUp = net::players[i].canMoveUp;
+                        enemies[j].canMoveDown = net::players[i].canMoveDown;
+                        enemies[j].canMoveLeft = net::players[i].canMoveLeft;
+                        enemies[j].canMoveRight = net::players[i].canMoveRight;
+                        enemies[j].projectile_x = net::players[i].projectile_x;
+                        enemies[j].projectile_y = net::players[i].projectile_y;
+                        enemies[j].projectileAlive = net::players[i].projectileAlive;
+                        enemies[j].collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
+                        enemyUpdate = true;
+                        break;
+                        /*bool hasProjectile = false;
+                        if (player.projectileAlive)
                         {
-                            std::cout << "enemy update" << std::endl;
-                            enemies[i].hp = player.hp;
-                            enemies[i].x = player.x;
-                            enemies[i].y = player.y;
-                            enemies[i].powerUpLevel = player.powerUpLevel;
-                            enemies[i].direction = player.direction;
-                            enemies[i].score = player.score;
-                            enemies[i].canMoveUp = player.canMoveUp;
-                            enemies[i].canMoveDown = player.canMoveDown;
-                            enemies[i].canMoveLeft = player.canMoveLeft;
-                            enemies[i].canMoveRight = player.canMoveRight;
-                            enemies[i].projectile_x = player.projectile_x;
-                            enemies[i].projectile_y = player.projectile_y;
-                            enemies[i].projectileAlive = player.projectileAlive;
-                            enemies[i].collisionRect.setPosition(player.collisionRect_x, player.collisionRect_y);
-                            enemyUpdate = true;
-
-                            bool hasProjectile = false;
-                            if (player.projectileAlive)
+                            counter = 0;
+                            for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
                             {
-                                counter = 0;
-                                for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
+                                if (player.id == projectileArr[counter].id)
                                 {
-                                    if (player.id == projectileArr[counter].id)
-                                    {
-                                        hasProjectile = true;
-                                        break;
-                                    }   
-                                }
-                                if (hasProjectile == false)
-                                {
-                                    counter = 0;
-                                    projectile.sprite = energyBallSprite;
-                                    projectile.id = player.id;
-                                    while (counter < player.powerUpLevel)
-                                    {
-                                        projectile.collisionRect.setPosition(
-                                            player.collisionRect_x + counter * generateRandom(10),
-                                            player.collisionRect_y + counter * generateRandom(10));
-                                        projectile.direction = player.direction;
-                                        projectileArr.push_back(projectile);
-                                        counter++;
-                                    }
+                                    hasProjectile = true;
+                                    break;
                                 }
                             }
-                        }
+                            if (hasProjectile == false)
+                            {
+                                counter = 0;
+                                projectile.sprite = energyBallSprite;
+                                projectile.id = player.id;
+                                while (counter < player.powerUpLevel)
+                                {
+                                    projectile.collisionRect.setPosition(
+                                        player.collisionRect_x + counter * generateRandom(10),
+                                        player.collisionRect_y + counter * generateRandom(10));
+                                    projectile.direction = player.direction;
+                                    projectileArr.push_back(projectile);
+                                    counter++;
+                                }
+                            }
+                        }*/
                     }
+                }
 
-                    if (enemyUpdate == false)
-                    {
-                        //std::cout << "enemyUpdate " << player.id << std::endl;
-                        enem = player;
-                        enem.sprite.setTexture(playerTexture);
-                        enemies.push_back(enem);
 
-                    }
-                    enemyUpdate = false;
-                }   
+                if (enemyUpdate == false)
+                {
+                    //std::cout << "enemyUpdate " << player.id << std::endl;
+                    enem.id = net::players[i].id;
+                    enem.hp = net::players[i].hp;
+                    enem.x = net::players[i].x;
+                    enem.y = net::players[i].y;
+                    enem.powerUpLevel = net::players[i].powerUpLevel;
+                    enem.direction = net::players[i].direction;
+                    enem.score = net::players[i].score;
+                    enem.canMoveUp = net::players[i].canMoveUp;
+                    enem.canMoveDown = net::players[i].canMoveDown;
+                    enem.canMoveLeft = net::players[i].canMoveLeft;
+                    enem.canMoveRight = net::players[i].canMoveRight;
+                    enem.projectile_x = net::players[i].projectile_x;
+                    enem.projectile_y = net::players[i].projectile_y;
+                    enem.projectileAlive = net::players[i].projectileAlive;
+                    enem.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
+                    enem.sprite.setTexture(playerTexture);
+                    enemies.push_back(enem);
 
+                }
+                enemyUpdate = false;
             }
         }
+        
+                    
+    
+
+        //    }
+        //}
         //else if (status == sf::Socket::NotReady)
         //    // ok, data received
         //    std::cout << "Not Ready" << std::endl;
@@ -898,7 +902,7 @@ int main()
                 player1.projectileAlive = true;
                 shootPacket << player1;
                 std::cout << player1.id << " : " << player1.collisionRect_x << " and " << player1.collisionRect_y << std::endl;
-                socket.send(shootPacket);
+           //     socket.send(shootPacket);
                 player1.updated = false;
                 projectile.sprite = energyBallSprite;
 
@@ -1011,20 +1015,28 @@ int main()
 
         for (size_t i = 0; i < enemies.size(); i++)
         {
-            if (!update)
-                enemies[i].update();
+         
+            std::cout << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
+            enemies[i].update();
+//            enemies[i].sprite.setPosition(enemies[i].collisionRect_x, enemies[i].collisionRect_y);
             window.draw(enemies[i].sprite);
+            //
+            
         }
         if (update)
         {
             player1.update();
             if (player1.updated == true)
             {
-                    sf::Packet movePacket;
-                    movePacket << player1;
-                    std::cout << player1.id << " : " << player1.collisionRect_x << " and " << player1.collisionRect_y << std::endl;
-                    socket.send(movePacket);
-                    player1.updated = false;
+                client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 1);
+                /*for (int i = 0; i < net::players.size(); i++)
+                {
+                    if (net::players[i].id == player1.id)
+                    {
+                        net::players[i].direction
+                    }
+                }*/
+                
             }
         }
         

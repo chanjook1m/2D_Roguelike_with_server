@@ -5,7 +5,7 @@
 class Player: public Entity
 {
 public:
-	int id = 1;
+	int id = 0;
 	int velocity = 2;	
 	float attackDamage = 1.0f;
 	int powerUpLevel = 1;

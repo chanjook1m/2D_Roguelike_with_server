@@ -85,5 +85,14 @@
     <ClInclude Include="client\ingameText.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="client\client_interface.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\net.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -66,7 +66,9 @@ void Player::move()
             canMoveDown = true;
             canMoveLeft = true;
             canMoveRight = true;
-        }
+            updated = false;
+            direction = 0;
+        }   
     }
     else
     {
@@ -108,6 +110,8 @@ void Player::move()
             canMoveDown = true;
             canMoveLeft = true;
             canMoveRight = true;
+            updated = false;
+            
         }
     }
     

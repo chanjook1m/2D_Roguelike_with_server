@@ -38,6 +38,7 @@ int main()
     bool done = false;
     
     std::vector <Player> enemies;
+    
     Player player1(24, 32);
     player1.isMainPlayer = true;
 
@@ -175,6 +176,7 @@ int main()
     vector<Projectile>::const_iterator projectileIter;
     vector<Projectile> projectileArr;
     Projectile projectile;
+    
     projectile.sprite = energyBallSprite;
 
     vector<Enemy>::const_iterator enemyIter;
@@ -422,13 +424,13 @@ int main()
         std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
         std::cout << "ID : " << player1.id << std::endl;
+
+        // update players
         for (int i = 0; i < net::players.size(); i++)
         {
             std::cout << "ID2 : " << net::players[i].id << std::endl;
             if (net::players[i].id == player1.id)
             {
-               // std::cout << "--------------player update "<< net::players[i].collisionRect_x << " : " << net::players[i].collisionRect_y << std::endl;
-                //std::cout << "pla up" << std::endl;
                 player1.hp = net::players[i].hp;
                 player1.x = net::players[i].x;
                 player1.y = net::players[i].y;
@@ -439,9 +441,7 @@ int main()
                 player1.canMoveDown = net::players[i].canMoveDown;
                 player1.canMoveLeft = net::players[i].canMoveLeft;
                 player1.canMoveRight = net::players[i].canMoveRight;
-                player1.projectile_x = net::players[i].projectile_x;
-                player1.projectile_y = net::players[i].projectile_y;
-                player1.projectileAlive = net::players[i].projectileAlive;
+                
                 player1.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                 player1.sprite.setPosition(player1.collisionRect.getPosition());
             }
@@ -465,9 +465,7 @@ int main()
                         enemies[j].canMoveDown = net::players[i].canMoveDown;
                         enemies[j].canMoveLeft = net::players[i].canMoveLeft;
                         enemies[j].canMoveRight = net::players[i].canMoveRight;
-                        enemies[j].projectile_x = net::players[i].projectile_x;
-                        enemies[j].projectile_y = net::players[i].projectile_y;
-                        enemies[j].projectileAlive = net::players[i].projectileAlive;
+                
                         enemies[j].collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                         enemyUpdate = true;
                         break;
@@ -517,9 +515,7 @@ int main()
                     enem.canMoveDown = net::players[i].canMoveDown;
                     enem.canMoveLeft = net::players[i].canMoveLeft;
                     enem.canMoveRight = net::players[i].canMoveRight;
-                    enem.projectile_x = net::players[i].projectile_x;
-                    enem.projectile_y = net::players[i].projectile_y;
-                    enem.projectileAlive = net::players[i].projectileAlive;
+                
                     enem.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                     enem.sprite.setTexture(playerTexture);
                     enemies.push_back(enem);
@@ -528,21 +524,47 @@ int main()
                 enemyUpdate = false;
             }
         }
+        //
         
-                    
-    
+        // update projectiles
+        counter = 0;
+        int bnum = 0;
+        std::cout << "projectiles size : " << net::projectiles.size() << std::endl;
+        int netProjectileSize = net::projectiles.size();
+        int clientProjectileSize = projectileArr.size();
+        int diff = netProjectileSize - clientProjectileSize;
+        if (clientProjectileSize < netProjectileSize)
+        {
+            counter2 = netProjectileSize - diff;
+            while (counter2 < netProjectileSize)
+            { 
+                projectile.id = net::projectiles[counter2].id;
+                projectile.isAlive = net::projectiles[counter2].isAlive;
+                projectile.collisionRect.setPosition(net::projectiles[counter2].collisionRect_x,
+                    net::projectiles[counter2].collisionRect_y);
+                projectile.direction = net::projectiles[counter2].direction;
+                projectileArr.push_back(projectile);
+                counter2++;
+            }
+        }
+        else if (clientProjectileSize == netProjectileSize)
+        {
+            for (size_t i = 0; i < net::projectiles.size(); i++)
+            {
+                //projectile.id = net::projectiles[i].id;
+                projectileArr[i].collisionRect.setPosition(net::projectiles[i].collisionRect_x,
+                    net::projectiles[i].collisionRect_y);
+                //projectileArr[i]rojectile.direction = net::projectiles[i].direction;
+                //projectileArr.push_back(projectile);
+            }
+        }
+        else
+        {
 
-        //    }
-        //}
-        //else if (status == sf::Socket::NotReady)
-        //    // ok, data received
-        //    std::cout << "Not Ready" << std::endl;
-        //else if (status == sf::Socket::Error)
-        //    // error
-        //    std::cout << "Error" << std::endl;
-        //else if (status == sf::Socket::Disconnected)
-        //    // disconnected
-        //    std::cout << "Disconnected" << std::endl;
+        }
+        //
+
+        
         
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
@@ -884,29 +906,7 @@ int main()
                 shotSound.play();
                 projectileClock.restart();
 
-                counter = 0;
-                projectile.sprite = energyBallSprite;
-                projectile.id = player1.id;
-                while (counter < player1.powerUpLevel)
-                {
-                    projectile.collisionRect.setPosition(
-                        player1.collisionRect_x + counter * generateRandom(10),
-                        player1.collisionRect_y + counter * generateRandom(10));
-                    projectile.direction = player1.direction;
-                    projectileArr.push_back(projectile);
-                    counter++;
-                }
-
-                sf::Packet shootPacket;
-                player1.shooted = true;
-                player1.projectileAlive = true;
-                shootPacket << player1;
-                std::cout << player1.id << " : " << player1.collisionRect_x << " and " << player1.collisionRect_y << std::endl;
-           //     socket.send(shootPacket);
-                player1.updated = false;
-                projectile.sprite = energyBallSprite;
-
-                
+                client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
             }
         }
 
@@ -960,29 +960,10 @@ int main()
         counter = 0;
         for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
         {
-            for (size_t i = 0; i < enemies.size(); i++)
-            {
-                if (enemies[i].id == projectileArr[counter].id)
-                {
-                    projectileArr[counter].isAlive = enemies[i].projectileAlive;
-                    projectileArr[counter].collisionRect.setPosition(enemies[i].projectile_x, enemies[i].projectile_y);
-                    projectileArr[counter].sprite.setPosition(projectileArr[counter].collisionRect.getPosition());
-                    // draw eneryball
-                    gif.update(projectileArr[counter].sprite);
-                    window.draw(projectileArr[counter].sprite);
-                }
-            }
-
-            if (player1.id == projectileArr[counter].id)
-            {
-                std::cout << "shooted2: " << player1.projectile_x << " : " << player1.projectile_y << std::endl;
-                projectileArr[counter].isAlive = player1.projectileAlive;
-                projectileArr[counter].collisionRect.setPosition(player1.projectile_x, player1.projectile_y);
-                projectileArr[counter].sprite.setPosition(projectileArr[counter].collisionRect.getPosition());
-                //projectileArr[counter].update();
-                gif.update(projectileArr[counter].sprite);
-                window.draw(projectileArr[counter].sprite);
-            }
+            projectileArr[counter].update();
+            // draw eneryball
+            gif.update(projectileArr[counter].sprite);
+            window.draw(projectileArr[counter].sprite);
             counter++;
         }
 

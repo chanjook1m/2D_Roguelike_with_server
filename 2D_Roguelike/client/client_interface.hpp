@@ -17,6 +17,7 @@ namespace net
 {
 	bool connected = false;
 	std::vector<Player> players;
+	std::vector<Projectile> projectiles;
 	int id;
 
 	struct Session
@@ -279,7 +280,9 @@ namespace net
 									
 								ServerPacket pack;
 								pack.load(str);
+
 								players = pack.players;
+								projectiles = pack.projectiles;
 								
 								//std::cout << "--->Request2 : " << pack.players[0].collisionRect_x << " : " << pack.players[0].collisionRect_y << std::endl;
 								

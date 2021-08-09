@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include <iostream>
 
 
@@ -10,7 +9,6 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 
 namespace net
 {
@@ -21,23 +19,70 @@ namespace net
 		void serialize(Archive& ar, const unsigned int version)
 		{
 			ar& id;
-			/*ar& velocity;
-			ar& powerUpLevel;
+			ar& velocity;
+			ar& attackDamage;
 			ar& direction;
-			ar& hp;
-			ar& score;
-			ar& canMoveUp;
-			ar& canMoveDown;
-			ar& canMoveLeft;
-			ar& canMoveRight;*/
+			ar& lifetime;
+			ar& lifetimeCounter;
+			ar& collisionRect_x;
+			ar& collisionRect_y;
+			ar& isAlive;
 		}
 	public:
 		int velocity = 2;
-		float attackDamage = 0.f;
+		float attackDamage = 1.0f;
 		int direction = 0; // 1 = up, 2 = down, 3 = left, 4 = right
 		int lifetime = 100;
 		int lifetimeCounter = 0;
 		int id = 0;
+		int collisionRect_x;
+		int collisionRect_y;
+		bool isAlive = false;
+
+		int temp_projectile_x = collisionRect_x;
+		int temp_projectile_y = collisionRect_y;
+
+		void update()
+		{
+			if (direction == 1)
+			{
+				collisionRect_x = temp_projectile_x;
+				collisionRect_y = temp_projectile_y - velocity;
+				temp_projectile_y = collisionRect_y;
+			}
+
+			if (direction == 2 || direction == 0)
+			{
+				collisionRect_x = temp_projectile_x;
+				collisionRect_y = temp_projectile_y + velocity;
+				temp_projectile_y = collisionRect_y;
+			}
+
+			if (direction == 3)
+			{
+				collisionRect_y = temp_projectile_y;
+				collisionRect_x = temp_projectile_x - velocity;
+				temp_projectile_x = collisionRect_x;
+
+			}
+
+			if (direction == 4)
+			{
+				collisionRect_y = temp_projectile_y;
+				collisionRect_x = temp_projectile_x + velocity;
+				temp_projectile_x = collisionRect_x;
+			}
+
+			lifetimeCounter++;
+
+			if (lifetimeCounter >= lifetime)
+			{
+				lifetimeCounter = 0;
+				temp_projectile_x = collisionRect_x;
+				temp_projectile_y = collisionRect_y;
+
+			}
+		}
 	};
 
 	class Player
@@ -59,7 +104,7 @@ namespace net
 			ar& canMoveDown;
 			ar& canMoveLeft;
 			ar& canMoveRight;
-			ar& moved;
+			
 		}
 	public:
 		int id = 1;
@@ -87,84 +132,10 @@ namespace net
 		int temp_y = collisionRect_y;
 
 
-		// projectile
-		int projectile_x = collisionRect_x;
-		int projectile_y = collisionRect_y;
-
-		int temp_projectile_x = collisionRect_x;
-		int temp_projectile_y = collisionRect_y;
-
-		int lifetime = 30;
-		int lifetimeCounter = 0;
-
-		bool projectileAlive = false;
-
-		bool updated = false;
-		bool shooted = false;
-		bool moved = false;
-		int projectileDirection;
 		void update()
 		{
 			move();
 			//sprite.setPosition(collisionRect.getPosition());
-		}
-
-		void projectileUpdate()
-		{
-			if (moved && projectileAlive == false)
-			{
-				temp_projectile_x = collisionRect_x;
-				temp_projectile_y = collisionRect_y;
-			}
-
-			if (projectileAlive)
-			{
-				if (lifetimeCounter == 0)
-				{
-					projectileDirection = direction;
-				}
-
-				if (projectileDirection == 1)
-				{
-					projectile_x = temp_projectile_x;
-					projectile_y = temp_projectile_y - velocity;
-					temp_projectile_y = projectile_y;
-				}
-
-				if (projectileDirection == 2 || projectileDirection == 0)
-				{
-					projectile_x = temp_projectile_x;
-					projectile_y = temp_projectile_y + velocity;
-					temp_projectile_y = projectile_y;
-				}
-
-				if (projectileDirection == 3)
-				{
-					projectile_y = temp_projectile_y;
-					projectile_x = temp_projectile_x - velocity;
-					temp_projectile_x = projectile_x;
-
-				}
-
-				if (projectileDirection == 4)
-				{
-					projectile_y = temp_projectile_y;
-					projectile_x = temp_projectile_x + velocity;
-					temp_projectile_x = projectile_x;
-				}
-
-				lifetimeCounter++;
-
-				if (lifetimeCounter >= lifetime)
-				{
-					lifetimeCounter = 0;
-					projectileAlive = false;
-					shooted = false;
-					temp_projectile_x = collisionRect_x;
-					temp_projectile_y = collisionRect_y;
-
-				}
-			}
 		}
 
 		void move()
@@ -178,7 +149,7 @@ namespace net
 				collisionRect_y = temp_y - velocity;
 				temp_y = collisionRect_y;
 
-				moved = true;
+
 			}
 			else if (direction == 2 && canMoveDown)
 			{
@@ -189,7 +160,7 @@ namespace net
 				collisionRect_y = temp_y + velocity;
 				temp_y = collisionRect_y;
 
-				moved = true;
+
 			}
 			else if (direction == 3 && canMoveLeft)
 			{
@@ -199,7 +170,7 @@ namespace net
 				collisionRect_y = temp_y;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
-				moved = true;
+
 			}
 			else if (direction == 4 && canMoveRight)
 			{
@@ -209,7 +180,7 @@ namespace net
 				collisionRect_y = temp_y;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
-				moved = true;
+
 			}
 			else
 			{
@@ -219,7 +190,7 @@ namespace net
 				canMoveRight = true;
 				collisionRect_x = temp_x;
 				collisionRect_y = temp_y;
-				moved = false;
+
 			}
 			//direction = 0;
 		}
@@ -294,6 +265,7 @@ namespace net
 		{
 
 		}
+
 		void save(std::ostream& oss)
 		{
 			boost::archive::binary_oarchive oa(oss);

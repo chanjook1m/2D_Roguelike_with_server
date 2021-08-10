@@ -9,9 +9,194 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <stdlib.h>
 
 namespace net
 {
+	class Item
+	{
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& animateSpriteNumber;
+			ar& delayCounter;
+			ar& animateDelay;
+			ar& type;
+			ar& scaleValue;
+			ar& inShop;
+			ar& cost;
+			ar& collisionRect_x;
+			ar& collisionRect_y;
+			ar& isAlive;
+		}
+
+		enum types
+		{
+			COIN = 1,
+			POWERUP,
+		};
+	public:
+		int animateSpriteNumber = 0;
+		int delayCounter = 0;
+		int animateDelay = 5;
+		int type = 0;
+		float scaleValue = 0.f;
+		bool inShop = false;
+		int cost = 0;
+		int collisionRect_x;
+		int collisionRect_y;
+		bool isAlive = false;
+
+		void update()
+		{
+			animate();
+		}
+
+		void animate()
+		{
+			delayCounter++;
+			if (delayCounter == animateDelay)
+			{
+				delayCounter = 0;
+				animateSpriteNumber++;
+				if (animateSpriteNumber == 5) {
+					animateSpriteNumber = 0;
+				}
+			}
+		}
+	};
+
+	class Enemy
+	{
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& isAlive;
+			ar& velocity;
+			ar& attackDamage;
+			ar& walkSpriteNumber;
+			ar& direction;
+			ar& delayCounter;
+			ar& movementDelay;
+			ar& hp;
+			ar& maxHp;
+
+			ar& canMoveUp;
+			ar& canMoveDown;
+			ar& canMoveLeft;
+			ar& canMoveRight;
+
+			ar& aggroedBy;
+
+			ar& collisionRect_x;
+			ar& collisionRect_y;
+		}
+
+	public:
+		bool isAlive = false;
+		int velocity = 1;
+		float attackDamage = 5.0f;
+		int walkSpriteNumber = 0;
+		int direction = 0;
+		int delayCounter = 0;
+		int movementDelay = 20;
+		int hp = 3;
+		int maxHp = 3;
+		int width = 48;
+		int height = 48;
+
+		bool canMoveUp = true;
+		bool canMoveDown = true;
+		bool canMoveLeft = true;
+		bool canMoveRight = true;
+
+		int aggroedBy = 0;
+
+		int collisionRect_x = 300;
+		int collisionRect_y = 400;
+
+		int temp_x = collisionRect_x;
+		int temp_y = collisionRect_y;
+		void move()
+		{
+			if (direction == 1 && canMoveUp)
+			{
+				//collisionRect.move(0.f, -velocity);
+				//sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth + x, spriteHeight * 3 + y, spriteWidth, spriteHeight));
+				collisionRect_x = temp_x;
+				collisionRect_y = temp_y - velocity;
+				temp_y = collisionRect_y;
+
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
+			}
+			else if (direction == 2 && canMoveDown)
+			{
+				//collisionRect.move(0.f, velocity);
+				//sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth + x, 0 + y, spriteWidth, spriteHeight));
+				collisionRect_x = temp_x;
+				collisionRect_y = temp_y + velocity;
+				temp_y = collisionRect_y;
+
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
+			}
+			else if (direction == 3 && canMoveLeft)
+			{
+				//collisionRect.move(-velocity, 0.f);
+				//sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth + x, spriteHeight * 1 + y, spriteWidth, spriteHeight));
+				collisionRect_x = temp_x - velocity;
+				temp_x = collisionRect_x;
+				collisionRect_y = temp_y;
+
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
+			}
+			else if (direction == 4 && canMoveRight)
+			{
+				//collisionRect.move(velocity, 0.f);
+				//sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth + x, spriteHeight * 2 + y, spriteWidth, spriteHeight));
+				collisionRect_x = temp_x + velocity;
+				temp_x = collisionRect_x;
+				collisionRect_y = temp_y;
+
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
+			}
+
+
+
+
+			walkSpriteNumber++;
+			if (walkSpriteNumber == 3) {
+				walkSpriteNumber = 0;
+			}
+
+			delayCounter++;
+			if (delayCounter == movementDelay)
+			{
+				int randomNumber = rand();
+				int random = (randomNumber % 4) + 1;
+				delayCounter = 0;
+				direction = random;
+			}
+		}
+		void update()
+		{
+			move();
+		}
+	};
+
 	class Projectile
 	{
 		friend class boost::serialization::access;
@@ -29,7 +214,7 @@ namespace net
 			ar& isAlive;
 		}
 	public:
-		int velocity = 2;
+		int velocity = 1;
 		float attackDamage = 1.0f;
 		int direction = 0; // 1 = up, 2 = down, 3 = left, 4 = right
 		int lifetime = 100;
@@ -38,6 +223,8 @@ namespace net
 		int collisionRect_x;
 		int collisionRect_y;
 		bool isAlive = false;
+		int width = 8;
+		int height = 8;
 
 		int temp_projectile_x = collisionRect_x;
 		int temp_projectile_y = collisionRect_y;
@@ -80,7 +267,7 @@ namespace net
 				lifetimeCounter = 0;
 				temp_projectile_x = collisionRect_x;
 				temp_projectile_y = collisionRect_y;
-
+				isAlive = false;
 			}
 		}
 	};
@@ -104,7 +291,6 @@ namespace net
 			ar& canMoveDown;
 			ar& canMoveLeft;
 			ar& canMoveRight;
-			
 		}
 	public:
 		int id = 1;
@@ -119,6 +305,8 @@ namespace net
 		int hp = 100;
 		int maxHp = 100;
 		int score = 0;
+		int width = 24;
+		int height = 32;
 
 		bool canMoveUp = true;
 		bool canMoveDown = true;
@@ -238,6 +426,8 @@ namespace net
 		int type;
 		std::vector<Player> players;
 		std::vector<Projectile> projectiles;
+		std::vector<Enemy> enemies;
+		std::vector<Item> items;
 		std::string msg;
 		int id;
 
@@ -252,6 +442,7 @@ namespace net
 			ar& msg;
 			ar& players;
 			ar& projectiles;
+			ar& enemies;
 
 		}
 

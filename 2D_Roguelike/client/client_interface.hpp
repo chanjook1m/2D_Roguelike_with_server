@@ -18,7 +18,11 @@ namespace net
 	bool connected = false;
 	std::vector<Player> players;
 	std::vector<Projectile> projectiles;
+	std::vector<Enemy> enemies;
+	std::vector<Item> items;
+
 	int id;
+	int packetSize = 700;
 
 	struct Session
 	{
@@ -151,7 +155,8 @@ namespace net
 								
 								boost::asio::async_read_until(session->m_sock,
 									session->m_request_buf,
-									boost::regex("[0-9]+"),
+									//boost::regex("[0-9]+"),
+									"\r\n",
 									[this, session](const boost::system::error_code& ec,
 										std::size_t bytes_transferred)
 									{
@@ -163,6 +168,7 @@ namespace net
 										else
 										{
 											std::cout << "Read222222" << std::endl;
+											
 											boost::asio::streambuf::const_buffers_type bufs = session->m_request_buf.data();
 											std::string str(boost::asio::buffers_begin(bufs),
 												boost::asio::buffers_begin(bufs) + bufs.size());
@@ -259,9 +265,10 @@ namespace net
 						return;
 					}
 					std::cout << "go2" << std::endl;
-					boost::asio::async_read(session->m_sock,
+					boost::asio::async_read_until(session->m_sock,
 						session->m_response_buf,
-						boost::asio::transfer_at_least(5),
+						//boost::asio::transfer_at_least(packetSize),
+						"\r\n",
 						[this, session](const boost::system::error_code& ec,
 							std::size_t bytes_transferred)
 						{
@@ -278,17 +285,25 @@ namespace net
 									boost::asio::buffers_begin(bufs) + bufs.size());
 
 									
+								std::cout << "strstr " << packetSize << std::endl;
+								if (bufs.size() >= 900 && packetSize < bufs.size())
+									packetSize += 200;
+								else if (packetSize > bufs.size() && packetSize >= 700)
+									packetSize = 700;
 								ServerPacket pack;
+
 								pack.load(str);
 
 								players = pack.players;
 								projectiles = pack.projectiles;
+								enemies = pack.enemies;
+								items = pack.items;
 								
-								//std::cout << "--->Request2 : " << pack.players[0].collisionRect_x << " : " << pack.players[0].collisionRect_y << std::endl;
+								std::cout << "--->Request2 : " << enemies.size() << std::endl;
 								
 								
 								
-								std::string response = str;	
+								//std::string response = str;	
 								
 								//std::istream stream(&session->m_response_buf);
 								//std::getline(stream, session->m_response);

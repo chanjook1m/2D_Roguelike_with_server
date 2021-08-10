@@ -53,7 +53,7 @@ int main()
     std::this_thread::sleep_for(std::chrono::seconds(5));
     std::cout << "status: " << (net::connected ? "connected" : "not connected") << std::endl;
     if (net::connected)
-        player1.id = net::id;
+        player1.id = net::id; 
     
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -421,7 +421,7 @@ int main()
         //// receive update game packet
         client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         std::cout << "ID : " << player1.id << std::endl;
 
@@ -441,6 +441,7 @@ int main()
                 player1.canMoveDown = net::players[i].canMoveDown;
                 player1.canMoveLeft = net::players[i].canMoveLeft;
                 player1.canMoveRight = net::players[i].canMoveRight;
+             
                 
                 player1.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                 player1.sprite.setPosition(player1.collisionRect.getPosition());
@@ -453,7 +454,7 @@ int main()
                     std::cout << "enem size : " << enemies.size() << std::endl;
                     if (enemies[j].id == net::players[i].id)
                     {
-                        std::cout << "enemy update - " << net::players[i].direction << std::endl;
+                        //std::cout << "enemy update - " << net::players[i].direction << std::endl;
                         enemies[j].id = net::players[i].id;
                         enemies[j].hp = net::players[i].hp;
                         enemies[j].x = net::players[i].x;
@@ -465,6 +466,7 @@ int main()
                         enemies[j].canMoveDown = net::players[i].canMoveDown;
                         enemies[j].canMoveLeft = net::players[i].canMoveLeft;
                         enemies[j].canMoveRight = net::players[i].canMoveRight;
+             
                 
                         enemies[j].collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                         enemyUpdate = true;
@@ -515,6 +517,7 @@ int main()
                     enem.canMoveDown = net::players[i].canMoveDown;
                     enem.canMoveLeft = net::players[i].canMoveLeft;
                     enem.canMoveRight = net::players[i].canMoveRight;
+             
                 
                     enem.collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                     enem.sprite.setTexture(playerTexture);
@@ -527,9 +530,7 @@ int main()
         //
         
         // update projectiles
-        counter = 0;
-        int bnum = 0;
-        std::cout << "projectiles size : " << net::projectiles.size() << std::endl;
+        //std::cout << "projectiles size : " << net::projectiles.size() << std::endl;
         int netProjectileSize = net::projectiles.size();
         int clientProjectileSize = projectileArr.size();
         int diff = netProjectileSize - clientProjectileSize;
@@ -558,13 +559,76 @@ int main()
                 //projectileArr.push_back(projectile);
             }
         }
-        else
-        {
-
-        }
         //
 
-        
+        // update enemies
+        int netEnemySize = net::enemies.size();
+        int clientEnemySize = enemyArr.size();
+        diff = netEnemySize - clientEnemySize;
+        std::cout << "enemy update: " << netEnemySize << " ; " << clientEnemySize << std::endl;
+        if (clientEnemySize < netEnemySize)
+        {
+            counter2 = netEnemySize - diff;
+            while (counter2 < netEnemySize)
+            {
+                
+                //enemy.id = net::projectiles[counter2].id;
+                enemy.isAlive = net::enemies[counter2].isAlive;
+                enemy.collisionRect.setPosition(net::enemies[counter2].collisionRect_x,
+                    net::enemies[counter2].collisionRect_y);
+                enemy.direction = net::enemies[counter2].direction;
+                enemy.hp = net::enemies[counter2].hp;
+                enemy.maxHp = net::enemies[counter2].maxHp;
+             
+                enemyArr.push_back(enemy);
+                counter2++;
+            }
+        }
+        else if (clientEnemySize == netEnemySize)
+        {
+            for (size_t i = 0; i < net::enemies.size(); i++)
+            {
+                std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
+                    net::enemies[i].collisionRect_y);
+                
+            }
+        }
+        //
+        // update items
+        int netItemSize = net::items.size();
+        int clientItemSize = itemArr.size();
+        diff = netItemSize - clientItemSize;
+        std::cout << "item update: " << netItemSize << " ; " << clientItemSize << std::endl;
+        if (clientItemSize < netItemSize)
+        {
+            counter2 = netItemSize - diff;
+            while (counter2 < netItemSize)
+            {
+
+                //enemy.id = net::projectiles[counter2].id;
+                item.isAlive = net::items[counter2].isAlive;
+                item.collisionRect.setPosition(net::items[counter2].collisionRect_x,
+                    net::items[counter2].collisionRect_y);
+                item.scaleValue = net::items[counter2].scaleValue;
+                item.inShop = net::items[counter2].inShop;
+                item.cost = net::items[counter2].cost;
+                item.type = net::items[counter2].inShop;
+
+                itemArr.push_back(item);
+                counter2++;
+            }
+        }
+        else if (clientItemSize == netItemSize)
+        {
+            for (size_t i = 0; i < net::items.size(); i++)
+            {
+                //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                itemArr[i].collisionRect.setPosition(net::items[i].collisionRect_x,
+                    net::items[i].collisionRect_y);
+
+            }
+        }
         
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
@@ -585,7 +649,7 @@ int main()
         sf::Time playerCollisionClockElapsed = playerCollisionClock.getElapsedTime();
         sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
 
-        
+        // collision logic start (should moved to server)
         // projectile-enemy collision
         counter = 0;
         for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
@@ -802,22 +866,22 @@ int main()
         {
             if (enemyArr[counter].isAlive == false)
             {
-                // generate item           
-                if (generateRandom(4) == 1)
-                {
-                    item = Item(10, 10, 200, 150, COIN);
-                    item.sprite.setTexture(coinTexture);
-                    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
-                    itemArr.push_back(item);
-                } 
-                else if (generateRandom(4) == 2)
-                {
-                    
-                    item = Item(0, 0, 100, 100, POWERUP);
-                    item.sprite.setTexture(powerUpTexture);
-                    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
-                    itemArr.push_back(item);
-                }
+                //// generate item           
+                //if (generateRandom(4) == 1)
+                //{
+                //    item = Item(10, 10, 200, 150, COIN);
+                //    item.sprite.setTexture(coinTexture);
+                //    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
+                //    itemArr.push_back(item);
+                //} 
+                //else if (generateRandom(4) == 2)
+                //{
+                //    
+                //    item = Item(0, 0, 100, 100, POWERUP);
+                //    item.sprite.setTexture(powerUpTexture);
+                //    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
+                //    itemArr.push_back(item);
+                //}
 
                 enemyArr.erase(enemyIter);
                 break;
@@ -867,22 +931,22 @@ int main()
         {
             if (wallArr[counter].isAlive == false)
             {
-                // generate item
-                if (generateRandom(4) == 1)
-                {
-                    item = Item(10, 10, 200, 150, COIN);
-                    item.sprite.setTexture(coinTexture);
-                    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
-                    itemArr.push_back(item);
-                }
-                else if (generateRandom(4) == 2)
-                {
-                    
-                    item = Item(0, 0, 100, 100, POWERUP);
-                    item.sprite.setTexture(powerUpTexture);
-                    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
-                    itemArr.push_back(item);
-                }
+                //// generate item
+                //if (generateRandom(4) == 1)
+                //{
+                //    item = Item(10, 10, 200, 150, COIN);
+                //    item.sprite.setTexture(coinTexture);
+                //    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
+                //    itemArr.push_back(item);
+                //}
+                //else if (generateRandom(4) == 2)
+                //{
+                //    
+                //    item = Item(0, 0, 100, 100, POWERUP);
+                //    item.sprite.setTexture(powerUpTexture);
+                //    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
+                //    itemArr.push_back(item);
+                //}
 
                 wallArr.erase(wallIter);
                 break;
@@ -893,15 +957,15 @@ int main()
         // create enemy (c-Key)
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
         {
-            enemy.collisionRect.setPosition(generateRandom(window.getSize().x), generateRandom(window.getSize().y));
-            enemyArr.push_back(enemy);
+            //enemy.collisionRect.setPosition(generateRandom(window.getSize().x), generateRandom(window.getSize().y));
+            //enemyArr.push_back(enemy);
         }
 
         // create projectile (space-Key)
         if (update)
         {
             counter = 0;
-            if (projectileClockElapsed.asSeconds() >= 0.2 && sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+            if (projectileClockElapsed.asSeconds() >= 1.0 && sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
             {
                 shotSound.play();
                 projectileClock.restart();

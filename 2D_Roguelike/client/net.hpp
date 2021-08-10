@@ -13,6 +13,45 @@
 
 namespace net
 {
+	template <typename T1, typename T2>
+	bool detectCollision(T1 a, T2 b)
+	{
+		if (a.collisionRect_x < b.collisionRect_x + b.width &&
+			a.collisionRect_x + a.width > b.collisionRect_x &&
+			a.collisionRect_y < b.collisionRect_y + b.height &&
+			a.collisionRect_y + a.height > b.collisionRect_y) {
+			// collision detected!
+			return true;
+		}
+		else
+			return false;
+	}
+
+	class Wall
+	{
+		friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, const unsigned int version)
+		{
+			ar& collisionRect_x;
+			ar& collisionRect_y;
+			ar& destructible;
+			ar& hp;
+			ar& width;
+			ar& height;
+			ar& isAlive;
+		}
+
+	public:
+		int collisionRect_x;
+		int collisionRect_y;
+		bool destructible = false;
+		int hp = 3;
+		int width = 18;
+		int height = 18;
+		bool isAlive = false;
+	};
+
 	class Item
 	{
 		friend class boost::serialization::access;
@@ -428,6 +467,7 @@ namespace net
 		std::vector<Projectile> projectiles;
 		std::vector<Enemy> enemies;
 		std::vector<Item> items;
+		std::vector<Wall> walls;
 		std::string msg;
 		int id;
 

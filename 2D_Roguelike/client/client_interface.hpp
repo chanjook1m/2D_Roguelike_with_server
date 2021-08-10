@@ -20,9 +20,10 @@ namespace net
 	std::vector<Projectile> projectiles;
 	std::vector<Enemy> enemies;
 	std::vector<Item> items;
+	std::vector<Wall> walls;
 
 	int id;
-	int packetSize = 700;
+	//int packetSize = 700;
 
 	struct Session
 	{
@@ -285,11 +286,11 @@ namespace net
 									boost::asio::buffers_begin(bufs) + bufs.size());
 
 									
-								std::cout << "strstr " << packetSize << std::endl;
+								/*std::cout << "strstr " << packetSize << std::endl;
 								if (bufs.size() >= 900 && packetSize < bufs.size())
 									packetSize += 200;
 								else if (packetSize > bufs.size() && packetSize >= 700)
-									packetSize = 700;
+									packetSize = 700;*/
 								ServerPacket pack;
 
 								pack.load(str);
@@ -298,6 +299,7 @@ namespace net
 								projectiles = pack.projectiles;
 								enemies = pack.enemies;
 								items = pack.items;
+								walls = pack.walls;
 								
 								std::cout << "--->Request2 : " << enemies.size() << std::endl;
 								

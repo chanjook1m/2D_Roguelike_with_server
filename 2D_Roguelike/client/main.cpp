@@ -588,7 +588,7 @@ int main()
         {
             for (size_t i = 0; i < net::enemies.size(); i++)
             {
-                std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                //std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
                 enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
                     net::enemies[i].collisionRect_y);
                 
@@ -629,7 +629,40 @@ int main()
 
             }
         }
-        
+        // update walls
+        int netWallSize = net::walls.size();
+        int clientWallSize = wallArr.size();
+        diff = netWallSize - clientWallSize;
+        std::cout << "wall update: " << netWallSize << " ; " << clientWallSize << std::endl;
+        if (clientWallSize < netWallSize)
+        {
+            counter2 = netWallSize - diff;
+            while (counter2 < netWallSize)
+            {
+
+                //enemy.id = net::projectiles[counter2].id;
+                wall.isAlive = net::walls[counter2].isAlive;
+                wall.collisionRect.setPosition(net::walls[counter2].collisionRect_x,
+                    net::walls[counter2].collisionRect_y);
+                wall.destructible = net::walls[counter2].destructible;
+                
+
+                wallArr.push_back(wall);
+                counter2++;
+            }
+        }
+        else if (clientWallSize == netWallSize)
+        {
+            for (size_t i = 0; i < net::walls.size(); i++)
+            {
+                //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                wallArr[i].collisionRect.setPosition(net::walls[i].collisionRect_x,
+                    net::walls[i].collisionRect_y);
+
+            }
+        }
+
+        //------
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (window.pollEvent(event))

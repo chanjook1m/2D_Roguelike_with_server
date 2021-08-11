@@ -38,6 +38,7 @@ int main()
     bool done = false;
     
     std::vector <Player> enemies;
+    vector<Player>::const_iterator playerIter;
     
     Player player1(24, 32);
     player1.isMainPlayer = true;
@@ -214,88 +215,6 @@ int main()
     int horizontalDoorAt = 2;
     int initialRoomX = 200;
     int initialRoomY = 300;
-    
-    counter = 0;
-    while (counter < roomSize)
-    {
-        // first room
-        wall.collisionRect.setPosition(50 * counter + initialRoomX, initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * counter + initialRoomX, 50 * roomSize + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(initialRoomX, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * roomSize + initialRoomX, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-
-        // second room
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50) + 50, initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50) + 50, 50 * roomSize + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(initialRoomX + (roomSize * 50) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * roomSize + initialRoomX + (roomSize * 50) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-
-        // third room
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50 * 2) + 50, initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50 * 2) + 50, 50 * roomSize + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(initialRoomX + (roomSize * 50 * 2) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * roomSize + initialRoomX + (roomSize * 50 * 2) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        
-        counter++;
-    }
-
-    counter = 0;
-    while (counter < bossRoomSize)
-    {
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (bossRoomSize * 50 * 2) + 50, initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * counter + initialRoomX + (bossRoomSize * 50 * 2) + 50, 50 * bossRoomSize + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(initialRoomX + (bossRoomSize * 50 * 2) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        wall.collisionRect.setPosition(50 * bossRoomSize + initialRoomX + (bossRoomSize * 50 * 2) + 50, 50 * counter + initialRoomY);
-        wall.destructible = generateRandomBool();
-        wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-        wallArr.push_back(wall);
-        counter++;
-    }
 
     // generate shop item
     item = Item(0, 0, 100, 100, POWERUP);
@@ -308,75 +227,6 @@ int main()
     item.collisionRect.setPosition((50 * roomSize / 2 + initialRoomX + (roomSize * 50 * 2) + 50), 50 * roomSize / 2 + initialRoomY);
     itemArr.push_back(item);
     item.inShop = false;
-    
-
-    // create wall and enemy in room
-    counter = 1;
-    while (counter < roomSize - 2)
-    {
-        counter2 = 1;
-        while (counter2 < roomSize - 2)
-        {
-            if (counter != counter2)
-            {
-                int tempRandom = generateRandom(7);
-
-                if (tempRandom == 1)
-                {
-                    // first room
-                    wall.destructible = true;
-                    wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-                    wall.collisionRect.setPosition((counter * 50) + 100 + initialRoomX, (counter2 * 50) + 100 + initialRoomY);
-                    wallArr.push_back(wall);
-
-                    // second room
-                    wall.destructible = true;
-                    wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-                    wall.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50) + 150, (counter2 * 50) + 100 + initialRoomY);
-                    wallArr.push_back(wall);
-                }
-                else if (tempRandom == 2)
-                {
-                    // first room
-                    //enemy.collisionRect.setPosition((counter * 50) + 100 + initialRoomX, (counter2 * 50) + 100 + initialRoomY);
-                    //enemyArr.push_back(enemy);
-
-                    //// second room
-                    //enemy.collisionRect.setPosition(50 * counter + initialRoomX + (roomSize * 50) + 150, (counter2 * 50) + 100 + initialRoomY);
-                    //enemyArr.push_back(enemy);
-                }
-            }
-            counter2++;
-        }
-        counter++;
-    }
-
-    // create enemy and wall in boss room
-
-    counter = 0;
-    while (counter < bossRoomSize - 1)
-    {
-        counter2 = 0;
-        while (counter2 < bossRoomSize - 1)
-        {
-            int tempRandom = generateRandom(40);
-
-            if (tempRandom == 1)
-            {
-                wall.destructible = true;
-                wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
-                wall.collisionRect.setPosition(50 * counter + initialRoomX + (bossRoomSize * 50 * 2) + 100, (counter2 * 50) + 50 + initialRoomY);
-                wallArr.push_back(wall);
-            }
-            else if (tempRandom == 2)
-            {
-                //enemy.collisionRect.setPosition(50 * counter + initialRoomX + (bossRoomSize * 50 * 2) + 100, (counter2 * 50) + 50 + initialRoomY);
-                //enemyArr.push_back(enemy);
-            }
-            counter2++;
-        }
-        counter++;
-    }
 
     Enemy boss(48 * 6, 0, 48, 48);
     boss.sprite.setTexture(enemyTexture);
@@ -409,9 +259,6 @@ int main()
     sf::Clock playerCollisionClock;
     sf::Clock aggroClock;
 
-    
-    
-    
     // run the program as long as the window is open
     bool enemyUpdate = false;
     bool update = false;
@@ -421,7 +268,7 @@ int main()
         //// receive update game packet
         client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
         std::cout << "ID : " << player1.id << std::endl;
 
@@ -431,6 +278,7 @@ int main()
             std::cout << "ID2 : " << net::players[i].id << std::endl;
             if (net::players[i].id == player1.id)
             {
+                player1.isAlive = net::players[i].isAlive;
                 player1.hp = net::players[i].hp;
                 player1.x = net::players[i].x;
                 player1.y = net::players[i].y;
@@ -450,11 +298,12 @@ int main()
             {
                 for (size_t j = 0; j < enemies.size(); j++)
                 {
-                    std::cout << "enem id : " << enemies[j].id << std::endl;
+                    std::cout << "enem player id : " << enemies[j].id << std::endl;
                     std::cout << "enem size : " << enemies.size() << std::endl;
                     if (enemies[j].id == net::players[i].id)
                     {
                         //std::cout << "enemy update - " << net::players[i].direction << std::endl;
+                        enemies[j].isAlive = net::players[i].isAlive;
                         enemies[j].id = net::players[i].id;
                         enemies[j].hp = net::players[i].hp;
                         enemies[j].x = net::players[i].x;
@@ -506,6 +355,7 @@ int main()
                 if (enemyUpdate == false)
                 {
                     //std::cout << "enemyUpdate " << player.id << std::endl;
+                    enem.isAlive = net::players[i].isAlive;
                     enem.id = net::players[i].id;
                     enem.hp = net::players[i].hp;
                     enem.x = net::players[i].x;
@@ -530,10 +380,11 @@ int main()
         //
         
         // update projectiles
-        //std::cout << "projectiles size : " << net::projectiles.size() << std::endl;
+        
         int netProjectileSize = net::projectiles.size();
         int clientProjectileSize = projectileArr.size();
         int diff = netProjectileSize - clientProjectileSize;
+        std::cout << "projectile update: " << netProjectileSize << " ; " << clientProjectileSize << std::endl;
         if (clientProjectileSize < netProjectileSize)
         {
             counter2 = netProjectileSize - diff;
@@ -544,17 +395,25 @@ int main()
                 projectile.collisionRect.setPosition(net::projectiles[counter2].collisionRect_x,
                     net::projectiles[counter2].collisionRect_y);
                 projectile.direction = net::projectiles[counter2].direction;
+                projectile.isCollide = net::projectiles[counter2].isCollide;
                 projectileArr.push_back(projectile);
                 counter2++;
             }
         }
-        else if (clientProjectileSize == netProjectileSize)
+        else //if (clientProjectileSize == netProjectileSize)
         {
+
             for (size_t i = 0; i < net::projectiles.size(); i++)
             {
-                //projectile.id = net::projectiles[i].id;
-                projectileArr[i].collisionRect.setPosition(net::projectiles[i].collisionRect_x,
-                    net::projectiles[i].collisionRect_y);
+                //projectile.id = net::projectiles[i].id; 
+                // DEBUG: 이부분에서 vector 접근 충돌이 자주 일어남 확인 필요
+                if (projectileArr.size() > 0 &&  projectileArr[i].id == net::projectiles[i].id)
+                {
+                    projectileArr[i].isAlive = net::projectiles[i].isAlive;
+                    projectileArr[i].isCollide = net::projectiles[i].isCollide;
+                    projectileArr[i].collisionRect.setPosition(net::projectiles[i].collisionRect_x,
+                        net::projectiles[i].collisionRect_y);
+                }
                 //projectileArr[i]rojectile.direction = net::projectiles[i].direction;
                 //projectileArr.push_back(projectile);
             }
@@ -572,25 +431,30 @@ int main()
             while (counter2 < netEnemySize)
             {
                 
-                //enemy.id = net::projectiles[counter2].id;
+                enemy.id = net::enemies[counter2].id;
                 enemy.isAlive = net::enemies[counter2].isAlive;
                 enemy.collisionRect.setPosition(net::enemies[counter2].collisionRect_x,
                     net::enemies[counter2].collisionRect_y);
                 enemy.direction = net::enemies[counter2].direction;
                 enemy.hp = net::enemies[counter2].hp;
                 enemy.maxHp = net::enemies[counter2].maxHp;
-             
+                enemy.isCollide = net::enemies[counter2].isCollide;
                 enemyArr.push_back(enemy);
                 counter2++;
             }
         }
-        else if (clientEnemySize == netEnemySize)
+        else //if (clientEnemySize == netEnemySize)
         {
             for (size_t i = 0; i < net::enemies.size(); i++)
             {
                 //std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
-                enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
-                    net::enemies[i].collisionRect_y);
+                if (enemyArr[i].id == net::enemies[i].id)
+                {
+                    enemyArr[i].isAlive = net::enemies[i].isAlive;
+                    enemyArr[i].isCollide = net::enemies[i].isCollide;
+                    enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
+                        net::enemies[i].collisionRect_y);
+                }
                 
             }
         }
@@ -606,26 +470,46 @@ int main()
             while (counter2 < netItemSize)
             {
 
-                //enemy.id = net::projectiles[counter2].id;
+                item.id = net::items[counter2].id;
                 item.isAlive = net::items[counter2].isAlive;
                 item.collisionRect.setPosition(net::items[counter2].collisionRect_x,
                     net::items[counter2].collisionRect_y);
                 item.scaleValue = net::items[counter2].scaleValue;
                 item.inShop = net::items[counter2].inShop;
                 item.cost = net::items[counter2].cost;
-                item.type = net::items[counter2].inShop;
+                item.type = net::items[counter2].type;
+                item.isCollide = net::items[counter2].isCollide;
+                item.animateSpriteNumber = net::items[counter2].animateSpriteNumber;
+                
+                item.spriteWidth = item.type == COIN ? 200 : 100;
+                item.spriteHeight = item.type == COIN ? 150 : 100;
+                item.y = item.type == COIN ? 10 : 0;
+                item.sprite.setScale(sf::Vector2f(item.scaleValue, item.scaleValue));
+                item.sprite.setTextureRect(item.type == COIN ? 
+                    sf::IntRect(10, 10, 200, 150) : sf::IntRect(0, 0, 100, 100));
+                
+                item.sprite.setTexture(item.type == COIN ? coinTexture : powerUpTexture);
 
                 itemArr.push_back(item);
                 counter2++;
             }
         }
-        else if (clientItemSize == netItemSize)
+        else //if (clientItemSize == netItemSize)
         {
             for (size_t i = 0; i < net::items.size(); i++)
             {
                 //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
-                itemArr[i].collisionRect.setPosition(net::items[i].collisionRect_x,
-                    net::items[i].collisionRect_y);
+                if (itemArr[i].id == net::items[i].id)
+                {
+                    itemArr[i].isAlive = net::items[i].isAlive;
+                    itemArr[i].isCollide = net::items[i].isCollide;
+                    itemArr[i].collisionRect.setPosition(net::items[i].collisionRect_x,
+                        net::items[i].collisionRect_y);
+                    //itemArr[i].animateSpriteNumber = net::items[i].animateSpriteNumber;
+                    /*int spriteWidth = item.type == COIN ? 250 : 100;
+                    int spriteHeight = item.type == COIN ? 150 : 100;
+                    itemArr[i].sprite.setTextureRect(sf::IntRect(itemArr[i].animateSpriteNumber* spriteWidth, itemArr[i].collisionRect.getPosition().y, spriteWidth, spriteHeight));*/
+                }
 
             }
         }
@@ -641,23 +525,31 @@ int main()
             {
 
                 //enemy.id = net::projectiles[counter2].id;
+                wall.id = net::walls[counter2].id;
                 wall.isAlive = net::walls[counter2].isAlive;
+                wall.hp = net::walls[counter2].hp;
                 wall.collisionRect.setPosition(net::walls[counter2].collisionRect_x,
                     net::walls[counter2].collisionRect_y);
                 wall.destructible = net::walls[counter2].destructible;
-                
-
+                wall.sprite.setTextureRect(wall.destructible ? sf::IntRect(0, 0, 18, 18) : sf::IntRect(0, 32, 18, 18));
+                wall.isCollide = net::walls[counter2].isCollide;
                 wallArr.push_back(wall);
                 counter2++;
             }
         }
-        else if (clientWallSize == netWallSize)
+        else //if (clientWallSize == netWallSize)
         {
             for (size_t i = 0; i < net::walls.size(); i++)
             {
                 //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
-                wallArr[i].collisionRect.setPosition(net::walls[i].collisionRect_x,
-                    net::walls[i].collisionRect_y);
+                if (wallArr[i].id == net::walls[i].id)
+                {
+                    wallArr[i].hp = net::walls[i].hp;
+                    wallArr[i].isAlive = net::walls[i].isAlive;
+                    wallArr[i].isCollide = net::walls[i].isCollide;
+                    wallArr[i].collisionRect.setPosition(net::walls[i].collisionRect_x,
+                        net::walls[i].collisionRect_y);
+                }
 
             }
         }
@@ -683,122 +575,151 @@ int main()
         sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
 
         // collision logic start (should moved to server)
-        // projectile-enemy collision
-        counter = 0;
-        for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
-        {
-            counter2 = 0;
-            for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-            {
-                if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(enemyArr[counter2].collisionRect.getGlobalBounds()))
-                { 
-                    collisionSound.play();
-                    projectileArr[counter].isAlive = false;
+        
+        //counter = 0;
+        //for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
+        //{
+        //    //// projectile-enemy collision
+        //    //counter2 = 0;
+        //    //for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
+        //    //{
+        //    //    if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(enemyArr[counter2].collisionRect.getGlobalBounds()))
+        //    //    { 
+        //    //        collisionSound.play();
+        //    //        projectileArr[counter].isAlive = false;
 
-                    ingameText.text.setFillColor(sf::Color::Red);
-                    ingameText.text.setString(to_string((int)projectileArr[counter].attackDamage));
-                    ingameText.text.setPosition(enemyArr[counter2].collisionRect.getPosition().x + enemyArr[counter2].collisionRect.getSize().x/2
-                        , enemyArr[counter2].collisionRect.getPosition().y - enemyArr[counter2].collisionRect.getSize().y / 2);
-                    ingameTextArr.push_back(ingameText);
-                        
-                    enemyArr[counter2].hp -= projectileArr[counter].attackDamage;
-                    if (enemyArr[counter2].hp <= 0)
-                    {
-                        enemyArr[counter2].isAlive = false;
-                        enemyArr[counter2].aggroedBy = 0;
-                    }
-                    
-                }
-                counter2++;
-            }
-            counter++;
-        }
+        //    //        ingameText.text.setFillColor(sf::Color::Red);
+        //    //        ingameText.text.setString(to_string((int)projectileArr[counter].attackDamage));
+        //    //        ingameText.text.setPosition(enemyArr[counter2].collisionRect.getPosition().x + enemyArr[counter2].collisionRect.getSize().x/2
+        //    //            , enemyArr[counter2].collisionRect.getPosition().y - enemyArr[counter2].collisionRect.getSize().y / 2);
+        //    //        ingameTextArr.push_back(ingameText);
+        //    //            
+        //    //        enemyArr[counter2].hp -= projectileArr[counter].attackDamage;
+        //    //        if (enemyArr[counter2].hp <= 0)
+        //    //        {
+        //    //            enemyArr[counter2].isAlive = false;
+        //    //            enemyArr[counter2].aggroedBy = 0;
+        //    //        }
+        //    //        
+        //    //    }
+        //    //    counter2++;
+        //    //}
 
-        // player-enemy collision && enemy aggro
-        if (playerCollisionClockElapsed.asSeconds() >= 0.5)
-        {
-            playerCollisionClock.restart();
-            counter = 0;
-            for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-            {
-                if (abs(player1.collisionRect.getPosition().y - enemyArr[counter].collisionRect.getPosition().y) <= 5 ||
-                    abs(player1.collisionRect.getPosition().x - enemyArr[counter].collisionRect.getPosition().x) <= 5)
-                {
-                    enemyArr[counter].aggroedBy = 1;
-                }
-                else
-                {
-                    enemyArr[counter].aggroedBy = 0;
-                }
-                if (player1.collisionRect.getGlobalBounds().intersects(enemyArr[counter].collisionRect.getGlobalBounds()))
-                {
-                    hitSound.play();
-                    player1.hp -= enemyArr[counter].attackDamage;
+        //    // projectile - players collision
+        //    counter2 = 0;
+        //    for (playerIter = enemies.begin(); playerIter != enemies.end(); playerIter++)
+        //    {
+        //        if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(enemies[counter2].collisionRect.getGlobalBounds()))
+        //        {
+        //            //collisionSound.play();
+        //            projectileArr[counter].isAlive = false;
 
-                    if (player1.powerUpLevel > 1)
-                    {
-                        player1.powerUpLevel--;
-                    }
+        //            ingameText.text.setFillColor(sf::Color::Red);
+        //            ingameText.text.setString(to_string((int)projectileArr[counter].attackDamage));
+        //            ingameText.text.setPosition(enemies[counter2].collisionRect.getPosition().x + enemies[counter2].collisionRect.getSize().x / 2
+        //                , enemies[counter2].collisionRect.getPosition().y - enemies[counter2].collisionRect.getSize().y / 2);
+        //            ingameTextArr.push_back(ingameText);
 
-                    ingameText.text.setFillColor(sf::Color::Yellow);
-                    ingameText.text.setString(to_string((int)enemyArr[counter].attackDamage));
-                    ingameText.text.setPosition(player1.collisionRect.getPosition().x + player1.collisionRect.getSize().x / 2,
-                        player1.collisionRect.getPosition().y - player1.collisionRect.getSize().y / 2);
-                    ingameTextArr.push_back(ingameText);
-                }
-                counter++;
-            }
-        }
+        //            enemies[counter2].hp -= projectileArr[counter].attackDamage;
+        //            if (enemies[counter2].hp <= 0)
+        //            {
+        //                enemies[counter2].isAlive = false;
+        //            }
 
-        // player-item collision
-        counter = 0;
-        for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
-        {
-            if (player1.collisionRect.getGlobalBounds().intersects(itemArr[counter].collisionRect.getGlobalBounds()))
-            {
-                if (itemArr[counter].inShop == false)
-                {
-                    if (itemArr[counter].type == COIN)
-                    {
-                        coinSound.play();
-                        player1.score += 20;
-                    }
-                    else if (itemArr[counter].type == POWERUP)
-                    {
-                        powerUpSound.play();
-                        if (player1.powerUpLevel < player1.maxPowerUpLevel)
-                        {
-                            player1.powerUpLevel++;
-                        }
-                    }
-                    itemArr[counter].isAlive = false;
-                }
-                else
-                {
-                    if (player1.score >= itemArr[counter].cost && player1.powerUpLevel < 5)
-                    {
-                        powerUpSound.play();
-                        int num = player1.score / itemArr[counter].cost;
-                        
-                        if (player1.powerUpLevel + num >= 5)
-                        {
-                            num = 5 - player1.powerUpLevel;
-                            player1.powerUpLevel = 5;
-                        } 
-                        else
-                        {
-                            player1.powerUpLevel += num;
-                        }
-                        player1.score -= itemArr[counter].cost * num;
-                        
-                    }
-                }
-            }
-            counter++;
-        }
+        //        }
+        //        counter2++;
+        //    }
+        //    counter++;
+        //}
+
+        
+
+
+        //// player-enemy collision && enemy aggro
+        //if (playerCollisionClockElapsed.asSeconds() >= 0.5)
+        //{
+        //    playerCollisionClock.restart();
+        //    counter = 0;
+        //    for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
+        //    {
+        //        if (abs(player1.collisionRect.getPosition().y - enemyArr[counter].collisionRect.getPosition().y) <= 5 ||
+        //            abs(player1.collisionRect.getPosition().x - enemyArr[counter].collisionRect.getPosition().x) <= 5)
+        //        {
+        //            enemyArr[counter].aggroedBy = 1;
+        //        }
+        //        else
+        //        {
+        //            enemyArr[counter].aggroedBy = 0;
+        //        }
+        //        if (player1.collisionRect.getGlobalBounds().intersects(enemyArr[counter].collisionRect.getGlobalBounds()))
+        //        {
+        //            hitSound.play();
+        //            player1.hp -= enemyArr[counter].attackDamage;
+
+        //            if (player1.powerUpLevel > 1)
+        //            {
+        //                player1.powerUpLevel--;
+        //            }
+
+        //            ingameText.text.setFillColor(sf::Color::Yellow);
+        //            ingameText.text.setString(to_string((int)enemyArr[counter].attackDamage));
+        //            ingameText.text.setPosition(player1.collisionRect.getPosition().x + player1.collisionRect.getSize().x / 2,
+        //                player1.collisionRect.getPosition().y - player1.collisionRect.getSize().y / 2);
+        //            ingameTextArr.push_back(ingameText);
+        //        }
+        //        counter++;
+        //    }
+        //}
+
+        //// player-item collision
+        //counter = 0;
+        //for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
+        //{
+        //    if (player1.collisionRect.getGlobalBounds().intersects(itemArr[counter].collisionRect.getGlobalBounds()))
+        //    {
+        //        if (itemArr[counter].inShop == false)
+        //        {
+        //            if (itemArr[counter].type == COIN)
+        //            {
+        //                coinSound.play();
+        //                player1.score += 20;
+        //            }
+        //            else if (itemArr[counter].type == POWERUP)
+        //            {
+        //                powerUpSound.play();
+        //                if (player1.powerUpLevel < player1.maxPowerUpLevel)
+        //                {
+        //                    player1.powerUpLevel++;
+        //                }
+        //            }
+        //            itemArr[counter].isAlive = false;
+        //        }
+        //        else
+        //        {
+        //            if (player1.score >= itemArr[counter].cost && player1.powerUpLevel < 5)
+        //            {
+        //                powerUpSound.play();
+        //                int num = player1.score / itemArr[counter].cost;
+        //                
+        //                if (player1.powerUpLevel + num >= 5)
+        //                {
+        //                    num = 5 - player1.powerUpLevel;
+        //                    player1.powerUpLevel = 5;
+        //                } 
+        //                else
+        //                {
+        //                    player1.powerUpLevel += num;
+        //                }
+        //                player1.score -= itemArr[counter].cost * num;
+        //                
+        //            }
+        //        }
+        //    }
+        //    counter++;
+        //}
 
         // player-wall collision
-        counter = 0;
+        /*counter = 0;
         for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
         {
             if (player1.collisionRect.getGlobalBounds().intersects(wallArr[counter].collisionRect.getGlobalBounds()))
@@ -825,97 +746,90 @@ int main()
                 }
             }
             counter++;
-        }
+        }*/
 
-        // enemy-wall collision
-        counter = 0;
-        for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-        {
-            counter2 = 0;
-            for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
-            {
-                if (enemyArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
-                {
-                    if (enemyArr[counter].direction == 1)
-                    {
-                        enemyArr[counter].canMoveUp = false;
-                        enemyArr[counter].collisionRect.move(0, enemyArr[counter].velocity);
-                    }
-                    else if (enemyArr[counter].direction == 2)
-                    {
-                        enemyArr[counter].canMoveDown = false;
-                        enemyArr[counter].collisionRect.move(0, -enemyArr[counter].velocity);
-                    }
-                    else if (enemyArr[counter].direction == 3)
-                    {
-                        enemyArr[counter].canMoveLeft = false;
-                        enemyArr[counter].collisionRect.move(enemyArr[counter].velocity, 0);
-                    }
-                    else if (enemyArr[counter].direction == 4)
-                    {
-                        enemyArr[counter].canMoveRight = false;
-                        enemyArr[counter].collisionRect.move(-enemyArr[counter].velocity, 0);
-                    }
-                }
+        //// enemy-wall collision
+        //counter = 0;
+        //for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
+        //{
+        //    counter2 = 0;
+        //    for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
+        //    {
+        //        if (enemyArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
+        //        {
+        //            if (enemyArr[counter].direction == 1)
+        //            {
+        //                enemyArr[counter].canMoveUp = false;
+        //                enemyArr[counter].collisionRect.move(0, enemyArr[counter].velocity);
+        //            }
+        //            else if (enemyArr[counter].direction == 2)
+        //            {
+        //                enemyArr[counter].canMoveDown = false;
+        //                enemyArr[counter].collisionRect.move(0, -enemyArr[counter].velocity);
+        //            }
+        //            else if (enemyArr[counter].direction == 3)
+        //            {
+        //                enemyArr[counter].canMoveLeft = false;
+        //                enemyArr[counter].collisionRect.move(enemyArr[counter].velocity, 0);
+        //            }
+        //            else if (enemyArr[counter].direction == 4)
+        //            {
+        //                enemyArr[counter].canMoveRight = false;
+        //                enemyArr[counter].collisionRect.move(-enemyArr[counter].velocity, 0);
+        //            }
+        //        }
 
-                counter2++;
-            }
-            counter++;
-        }
+        //        counter2++;
+        //    }
+        //    counter++;
+        //}
 
-        // projectile-wall collision
-        counter = 0;
-        for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
-        {
-            counter2 = 0;
-            for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
-            {
-                if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
-                {
-                    
-                    if (wallArr[counter2].destructible == true)
-                    {
-                        wallCollisionSound.play(); 
-                        wallArr[counter2].hp -= projectileArr[counter].attackDamage;
+        //// projectile-wall collision
+        //counter = 0;
+        //for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
+        //{
+        //    counter2 = 0;
+        //    for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
+        //    {
+        //        if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
+        //        {
+        //            
+        //            if (wallArr[counter2].destructible == true)
+        //            {
+        //                //wallCollisionSound.play(); 
+        //                wallArr[counter2].hp -= projectileArr[counter].attackDamage;
 
-                        if (wallArr[counter2].hp <= 0)
-                        {
-                            wallArr[counter2].isAlive = false;
-                        }
-                    }
+        //                if (wallArr[counter2].hp <= 0)
+        //                {
+        //                    wallArr[counter2].isAlive = false;
+        //                }
+        //            }
 
-                    projectileArr[counter].isAlive = false;
-                }
+        //            projectileArr[counter].isAlive = false;
+        //        }
 
-                counter2++;
-            }
-            counter++;
-        }
+        //        counter2++;
+        //    }
+        //    counter++;
+        //}
 
 
         // delete not alive enemy
         counter = 0;
         for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
         {
-            if (enemyArr[counter].isAlive == false)
+            bool found = false;
+            for (auto i : net::enemies)
             {
-                //// generate item           
-                //if (generateRandom(4) == 1)
-                //{
-                //    item = Item(10, 10, 200, 150, COIN);
-                //    item.sprite.setTexture(coinTexture);
-                //    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
-                //    itemArr.push_back(item);
-                //} 
-                //else if (generateRandom(4) == 2)
-                //{
-                //    
-                //    item = Item(0, 0, 100, 100, POWERUP);
-                //    item.sprite.setTexture(powerUpTexture);
-                //    item.collisionRect.setPosition(enemyArr[counter].collisionRect.getPosition());
-                //    itemArr.push_back(item);
-                //}
-
+                if (enemyArr[counter].id == i.id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 enemyArr.erase(enemyIter);
                 break;
             }
@@ -926,8 +840,18 @@ int main()
         counter = 0;
         for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
         {
-            if (projectileArr[counter].isAlive == false)
+            bool found = false;
+            for (auto i : net::projectiles)
             {
+                if (projectileArr[counter].id == i.id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 projectileArr.erase(projectileIter);
                 break;
             }
@@ -950,8 +874,18 @@ int main()
         counter = 0;
         for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
         {
-            if (itemArr[counter].isAlive == false)
+            bool found = false;
+            for (auto i : net::items)
             {
+                if (itemArr[counter].id == i.id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 itemArr.erase(itemIter);
                 break;
             }
@@ -962,37 +896,46 @@ int main()
         counter = 0;
         for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
         {
-            if (wallArr[counter].isAlive == false)
+            bool found = false;
+            for (auto i : net::walls)
             {
-                //// generate item
-                //if (generateRandom(4) == 1)
-                //{
-                //    item = Item(10, 10, 200, 150, COIN);
-                //    item.sprite.setTexture(coinTexture);
-                //    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
-                //    itemArr.push_back(item);
-                //}
-                //else if (generateRandom(4) == 2)
-                //{
-                //    
-                //    item = Item(0, 0, 100, 100, POWERUP);
-                //    item.sprite.setTexture(powerUpTexture);
-                //    item.collisionRect.setPosition(wallArr[counter].collisionRect.getPosition());
-                //    itemArr.push_back(item);
-                //}
-
+                if (wallArr[counter].id == i.id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 wallArr.erase(wallIter);
                 break;
             }
             counter++;
         }
 
-        // create enemy (c-Key)
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
+        // delete not alive players
+        counter = 0;
+        for (playerIter = enemies.begin(); playerIter != enemies.end(); playerIter++)
         {
-            //enemy.collisionRect.setPosition(generateRandom(window.getSize().x), generateRandom(window.getSize().y));
-            //enemyArr.push_back(enemy);
+            bool found = false;
+            for (auto i : net::players)
+            {
+                if (enemies[counter].id == i.id)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
+                enemies.erase(playerIter);
+                break;
+            }
+            counter++;
         }
+
 
         // create projectile (space-Key)
         if (update)
@@ -1007,7 +950,7 @@ int main()
             }
         }
 
-        // enemy AI
+        // enemy AI - must be move to server
         counter = 0;
         for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
         {
@@ -1079,8 +1022,24 @@ int main()
         counter = 0;
         for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
         {
-            wallArr[counter].update();
-            window.draw(wallArr[counter].sprite);
+            if (wallArr[counter].isAlive == true)
+            {
+                wallArr[counter].update();
+                window.draw(wallArr[counter].sprite);
+            }
+            counter++;
+        }
+
+        // draw item
+        counter = 0;
+        for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
+        {
+            if (itemArr[counter].inShop == true)
+            {
+                window.draw(itemArr[counter].text);
+            }
+            itemArr[counter].update();
+            window.draw(itemArr[counter].sprite);
             counter++;
         }
 
@@ -1143,21 +1102,6 @@ int main()
             window.draw(ingameTextArr[counter].text);
             counter++;
         }
-
-        // draw item
-        counter = 0;
-        for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
-        {
-            if (itemArr[counter].inShop == true)
-            {
-                window.draw(itemArr[counter].text);
-            }
-            itemArr[counter].update();
-            window.draw(itemArr[counter].sprite);
-            counter++;
-        }
-
-        
         //
         window.display();
     }

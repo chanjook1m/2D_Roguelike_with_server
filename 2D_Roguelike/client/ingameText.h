@@ -8,7 +8,7 @@ public:
 	IngameText();
 	~IngameText();
 
-	string testString = "good";
+	string testString = "start";
 	float velocity = 2.0f;
 	int lifetimeCounter = 0;
 	int lifeTime = 50;

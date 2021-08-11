@@ -13,18 +13,45 @@
 
 namespace net
 {
+	bool generateRandomBool()
+	{
+		int randomNumber = rand();
+		int random = (randomNumber % 2) + 1;
+
+		if (random == 1)
+			return true;
+		else
+			return false;
+	}
+
+	int generateRandom(int max)
+	{
+		int randomNumber = rand();
+		int random = (randomNumber % max) + 1;
+
+		return random;
+	}
+
 	template <typename T1, typename T2>
 	bool detectCollision(T1 a, T2 b)
 	{
-		if (a.collisionRect_x < b.collisionRect_x + b.width &&
+		/*if (abs(a.collisionRect_x - (b.collisionRect_x + b.width)) < 50 &&
+			abs((a.collisionRect_x + a.width) - (b.collisionRect_x)) < 50 &&
+			abs(a.collisionRect_y - (b.collisionRect_y + b.height)) < 30 &&
+			abs((a.collisionRect_y - a.height) - (b.collisionRect_y)) < 30) {*/
+		if (a.collisionRect_x< b.collisionRect_x + 3 * b.width &&
 			a.collisionRect_x + a.width > b.collisionRect_x &&
-			a.collisionRect_y < b.collisionRect_y + b.height &&
+			a.collisionRect_y < b.collisionRect_y + 3 * b.height &&
 			a.collisionRect_y + a.height > b.collisionRect_y) {
 			// collision detected!
+			//std::cout << "ooooooooooooooooooooooooo detected " << std::endl;
 			return true;
 		}
 		else
+		{
+			//std::cout << "xxxxxxxxxxxxxx not detected " << std::endl;
 			return false;
+		}
 	}
 
 	class Wall
@@ -40,9 +67,12 @@ namespace net
 			ar& width;
 			ar& height;
 			ar& isAlive;
+			ar& isCollide;
+			ar& id;
 		}
 
 	public:
+		int id = 0;
 		int collisionRect_x;
 		int collisionRect_y;
 		bool destructible = false;
@@ -50,6 +80,7 @@ namespace net
 		int width = 18;
 		int height = 18;
 		bool isAlive = false;
+		bool isCollide = false;
 	};
 
 	class Item
@@ -68,6 +99,8 @@ namespace net
 			ar& collisionRect_x;
 			ar& collisionRect_y;
 			ar& isAlive;
+			ar& isCollide;
+			ar& id;
 		}
 
 		enum types
@@ -76,6 +109,8 @@ namespace net
 			POWERUP,
 		};
 	public:
+		int id;
+		bool isCollide = false;
 		int animateSpriteNumber = 0;
 		int delayCounter = 0;
 		int animateDelay = 5;
@@ -86,6 +121,8 @@ namespace net
 		int collisionRect_x;
 		int collisionRect_y;
 		bool isAlive = false;
+		int width = 10;
+		int height = 10;
 
 		void update()
 		{
@@ -131,16 +168,20 @@ namespace net
 
 			ar& collisionRect_x;
 			ar& collisionRect_y;
+			ar& isCollide;
+			ar& id;
 		}
 
 	public:
+		int id = 0;
+		bool isCollide = false;
 		bool isAlive = false;
 		int velocity = 1;
 		float attackDamage = 5.0f;
 		int walkSpriteNumber = 0;
 		int direction = 0;
 		int delayCounter = 0;
-		int movementDelay = 20;
+		int movementDelay = 40;
 		int hp = 3;
 		int maxHp = 3;
 		int width = 48;
@@ -212,6 +253,13 @@ namespace net
 				canMoveLeft = true;
 				canMoveRight = true;
 			}
+			else
+			{
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
+			}
 
 
 
@@ -251,9 +299,11 @@ namespace net
 			ar& collisionRect_x;
 			ar& collisionRect_y;
 			ar& isAlive;
+			ar& isCollide;
 		}
 	public:
-		int velocity = 1;
+		bool isCollide = false;
+		int velocity = 2;
 		float attackDamage = 1.0f;
 		int direction = 0; // 1 = up, 2 = down, 3 = left, 4 = right
 		int lifetime = 100;
@@ -262,8 +312,8 @@ namespace net
 		int collisionRect_x;
 		int collisionRect_y;
 		bool isAlive = false;
-		int width = 8;
-		int height = 8;
+		int width = 24;
+		int height = 32;
 
 		int temp_projectile_x = collisionRect_x;
 		int temp_projectile_y = collisionRect_y;
@@ -330,8 +380,12 @@ namespace net
 			ar& canMoveDown;
 			ar& canMoveLeft;
 			ar& canMoveRight;
+			ar& isAlive;
+			ar& isCollide;
 		}
 	public:
+		bool isCollide = false;
+		bool isAlive = false;
 		int id = 1;
 		int x = 0;
 		int y = 0;
@@ -375,6 +429,10 @@ namespace net
 				collisionRect_x = temp_x;
 				collisionRect_y = temp_y - velocity;
 				temp_y = collisionRect_y;
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
 
 
 			}
@@ -386,6 +444,10 @@ namespace net
 				collisionRect_x = temp_x;
 				collisionRect_y = temp_y + velocity;
 				temp_y = collisionRect_y;
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
 
 
 			}
@@ -395,6 +457,10 @@ namespace net
 				collisionRect_x = temp_x - velocity;
 				temp_x = collisionRect_x;
 				collisionRect_y = temp_y;
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
 
@@ -405,6 +471,10 @@ namespace net
 				collisionRect_x = temp_x + velocity;
 				temp_x = collisionRect_x;
 				collisionRect_y = temp_y;
+				canMoveUp = true;
+				canMoveDown = true;
+				canMoveLeft = true;
+				canMoveRight = true;
 				//collisionRect_y = collisionRect.getPosition().y;
 				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
 
@@ -483,7 +553,8 @@ namespace net
 			ar& players;
 			ar& projectiles;
 			ar& enemies;
-
+			ar& walls;
+			ar& items;
 		}
 
 	public:

@@ -107,6 +107,12 @@ namespace net
 				session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
 					request, request_id, callback));
 			}
+			else if (request_id == 1)
+			{
+				std::string request = "id_" + std::to_string(player_id);
+				session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+					request, request_id, callback));
+			}
 			else
 			{
 				boost::asio::streambuf buf;
@@ -201,7 +207,7 @@ namespace net
 											//{
 											//	ServerPacket pack;
 											//	pack.load(str);
-											//	players = pack.players;
+											//	players = pack.players;	
 											//	//std::cout << "Request2 : " << players[0].collisionRect_x << " : " << players[0].collisionRect_y << std::endl;
 											//	std::string response = str;
 											//}

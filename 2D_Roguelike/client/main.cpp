@@ -259,6 +259,8 @@ int main()
         //// receive update game packet
         client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
+        client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
+
         std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
         std::cout << "ID : " << player1.id << std::endl;
@@ -704,7 +706,7 @@ int main()
                 shotSound.play();
                 projectileClock.restart();
 
-                client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
+                client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 2);
             }
         }
 
@@ -779,7 +781,7 @@ int main()
             player1.update();
             if (player1.updated == true)
             {
-                client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 1);
+                client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 2);
                 /*for (int i = 0; i < net::players.size(); i++)
                 {
                     if (net::players[i].id == player1.id)

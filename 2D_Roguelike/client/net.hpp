@@ -177,7 +177,7 @@ namespace net
 		bool isCollide = false;
 		bool isAlive = false;
 		int velocity = 1;
-		float attackDamage = 5.0f;
+		float attackDamage = 1.0f;
 		int walkSpriteNumber = 0;
 		int direction = 0;
 		int delayCounter = 0;
@@ -312,8 +312,8 @@ namespace net
 		int collisionRect_x;
 		int collisionRect_y;
 		bool isAlive = false;
-		int width = 24;
-		int height = 32;
+		int width = 8;
+		int height = 8;
 
 		int temp_projectile_x = collisionRect_x;
 		int temp_projectile_y = collisionRect_y;

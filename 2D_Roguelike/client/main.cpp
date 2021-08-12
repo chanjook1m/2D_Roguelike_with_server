@@ -218,15 +218,6 @@ int main()
 
     // generate shop item
     item = Item(0, 0, 100, 100, POWERUP);
-    item.inShop = true;
-    item.cost = 10;
-    item.text.setFont(maumFont);
-    item.text.setFillColor(sf::Color::Green);
-    item.text.setString("Cost: " + to_string(item.cost));
-    item.sprite.setTexture(powerUpTexture);
-    item.collisionRect.setPosition((50 * roomSize / 2 + initialRoomX + (roomSize * 50 * 2) + 50), 50 * roomSize / 2 + initialRoomY);
-    itemArr.push_back(item);
-    item.inShop = false;
 
     Enemy boss(48 * 6, 0, 48, 48);
     boss.sprite.setTexture(enemyTexture);
@@ -450,6 +441,7 @@ int main()
                 //std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
                 if (enemyArr[i].id == net::enemies[i].id)
                 {
+                    enemyArr[i].hp= net::enemies[i].hp;
                     enemyArr[i].isAlive = net::enemies[i].isAlive;
                     enemyArr[i].isCollide = net::enemies[i].isCollide;
                     enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
@@ -489,7 +481,12 @@ int main()
                     sf::IntRect(10, 10, 200, 150) : sf::IntRect(0, 0, 100, 100));
                 
                 item.sprite.setTexture(item.type == COIN ? coinTexture : powerUpTexture);
-
+                if (item.inShop == true)
+                {
+                    item.text.setFont(maumFont);
+                    item.text.setFillColor(sf::Color::Green);
+                    item.text.setString("Cost: " + to_string(item.cost));
+                }
                 itemArr.push_back(item);
                 counter2++;
             }
@@ -573,245 +570,6 @@ int main()
         sf::Time projectileClockElapsed = projectileClock.getElapsedTime();
         sf::Time playerCollisionClockElapsed = playerCollisionClock.getElapsedTime();
         sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
-
-        // collision logic start (should moved to server)
-        
-        //counter = 0;
-        //for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
-        //{
-        //    //// projectile-enemy collision
-        //    //counter2 = 0;
-        //    //for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-        //    //{
-        //    //    if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(enemyArr[counter2].collisionRect.getGlobalBounds()))
-        //    //    { 
-        //    //        collisionSound.play();
-        //    //        projectileArr[counter].isAlive = false;
-
-        //    //        ingameText.text.setFillColor(sf::Color::Red);
-        //    //        ingameText.text.setString(to_string((int)projectileArr[counter].attackDamage));
-        //    //        ingameText.text.setPosition(enemyArr[counter2].collisionRect.getPosition().x + enemyArr[counter2].collisionRect.getSize().x/2
-        //    //            , enemyArr[counter2].collisionRect.getPosition().y - enemyArr[counter2].collisionRect.getSize().y / 2);
-        //    //        ingameTextArr.push_back(ingameText);
-        //    //            
-        //    //        enemyArr[counter2].hp -= projectileArr[counter].attackDamage;
-        //    //        if (enemyArr[counter2].hp <= 0)
-        //    //        {
-        //    //            enemyArr[counter2].isAlive = false;
-        //    //            enemyArr[counter2].aggroedBy = 0;
-        //    //        }
-        //    //        
-        //    //    }
-        //    //    counter2++;
-        //    //}
-
-        //    // projectile - players collision
-        //    counter2 = 0;
-        //    for (playerIter = enemies.begin(); playerIter != enemies.end(); playerIter++)
-        //    {
-        //        if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(enemies[counter2].collisionRect.getGlobalBounds()))
-        //        {
-        //            //collisionSound.play();
-        //            projectileArr[counter].isAlive = false;
-
-        //            ingameText.text.setFillColor(sf::Color::Red);
-        //            ingameText.text.setString(to_string((int)projectileArr[counter].attackDamage));
-        //            ingameText.text.setPosition(enemies[counter2].collisionRect.getPosition().x + enemies[counter2].collisionRect.getSize().x / 2
-        //                , enemies[counter2].collisionRect.getPosition().y - enemies[counter2].collisionRect.getSize().y / 2);
-        //            ingameTextArr.push_back(ingameText);
-
-        //            enemies[counter2].hp -= projectileArr[counter].attackDamage;
-        //            if (enemies[counter2].hp <= 0)
-        //            {
-        //                enemies[counter2].isAlive = false;
-        //            }
-
-        //        }
-        //        counter2++;
-        //    }
-        //    counter++;
-        //}
-
-        
-
-
-        //// player-enemy collision && enemy aggro
-        //if (playerCollisionClockElapsed.asSeconds() >= 0.5)
-        //{
-        //    playerCollisionClock.restart();
-        //    counter = 0;
-        //    for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-        //    {
-        //        if (abs(player1.collisionRect.getPosition().y - enemyArr[counter].collisionRect.getPosition().y) <= 5 ||
-        //            abs(player1.collisionRect.getPosition().x - enemyArr[counter].collisionRect.getPosition().x) <= 5)
-        //        {
-        //            enemyArr[counter].aggroedBy = 1;
-        //        }
-        //        else
-        //        {
-        //            enemyArr[counter].aggroedBy = 0;
-        //        }
-        //        if (player1.collisionRect.getGlobalBounds().intersects(enemyArr[counter].collisionRect.getGlobalBounds()))
-        //        {
-        //            hitSound.play();
-        //            player1.hp -= enemyArr[counter].attackDamage;
-
-        //            if (player1.powerUpLevel > 1)
-        //            {
-        //                player1.powerUpLevel--;
-        //            }
-
-        //            ingameText.text.setFillColor(sf::Color::Yellow);
-        //            ingameText.text.setString(to_string((int)enemyArr[counter].attackDamage));
-        //            ingameText.text.setPosition(player1.collisionRect.getPosition().x + player1.collisionRect.getSize().x / 2,
-        //                player1.collisionRect.getPosition().y - player1.collisionRect.getSize().y / 2);
-        //            ingameTextArr.push_back(ingameText);
-        //        }
-        //        counter++;
-        //    }
-        //}
-
-        //// player-item collision
-        //counter = 0;
-        //for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
-        //{
-        //    if (player1.collisionRect.getGlobalBounds().intersects(itemArr[counter].collisionRect.getGlobalBounds()))
-        //    {
-        //        if (itemArr[counter].inShop == false)
-        //        {
-        //            if (itemArr[counter].type == COIN)
-        //            {
-        //                coinSound.play();
-        //                player1.score += 20;
-        //            }
-        //            else if (itemArr[counter].type == POWERUP)
-        //            {
-        //                powerUpSound.play();
-        //                if (player1.powerUpLevel < player1.maxPowerUpLevel)
-        //                {
-        //                    player1.powerUpLevel++;
-        //                }
-        //            }
-        //            itemArr[counter].isAlive = false;
-        //        }
-        //        else
-        //        {
-        //            if (player1.score >= itemArr[counter].cost && player1.powerUpLevel < 5)
-        //            {
-        //                powerUpSound.play();
-        //                int num = player1.score / itemArr[counter].cost;
-        //                
-        //                if (player1.powerUpLevel + num >= 5)
-        //                {
-        //                    num = 5 - player1.powerUpLevel;
-        //                    player1.powerUpLevel = 5;
-        //                } 
-        //                else
-        //                {
-        //                    player1.powerUpLevel += num;
-        //                }
-        //                player1.score -= itemArr[counter].cost * num;
-        //                
-        //            }
-        //        }
-        //    }
-        //    counter++;
-        //}
-
-        // player-wall collision
-        /*counter = 0;
-        for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
-        {
-            if (player1.collisionRect.getGlobalBounds().intersects(wallArr[counter].collisionRect.getGlobalBounds()))
-            {
-                if (player1.direction == 1)
-                {
-                    player1.canMoveUp = false;
-                    player1.collisionRect.move(0, player1.velocity);
-                }
-                else if (player1.direction == 2)
-                {
-                    player1.canMoveDown = false;
-                    player1.collisionRect.move(0, -player1.velocity);
-                }
-                else if (player1.direction == 3)
-                {
-                    player1.canMoveLeft = false;
-                    player1.collisionRect.move(player1.velocity, 0);
-                }
-                else if (player1.direction == 4)
-                {
-                    player1.canMoveRight = false;
-                    player1.collisionRect.move(-player1.velocity, 0);
-                }
-            }
-            counter++;
-        }*/
-
-        //// enemy-wall collision
-        //counter = 0;
-        //for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
-        //{
-        //    counter2 = 0;
-        //    for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
-        //    {
-        //        if (enemyArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
-        //        {
-        //            if (enemyArr[counter].direction == 1)
-        //            {
-        //                enemyArr[counter].canMoveUp = false;
-        //                enemyArr[counter].collisionRect.move(0, enemyArr[counter].velocity);
-        //            }
-        //            else if (enemyArr[counter].direction == 2)
-        //            {
-        //                enemyArr[counter].canMoveDown = false;
-        //                enemyArr[counter].collisionRect.move(0, -enemyArr[counter].velocity);
-        //            }
-        //            else if (enemyArr[counter].direction == 3)
-        //            {
-        //                enemyArr[counter].canMoveLeft = false;
-        //                enemyArr[counter].collisionRect.move(enemyArr[counter].velocity, 0);
-        //            }
-        //            else if (enemyArr[counter].direction == 4)
-        //            {
-        //                enemyArr[counter].canMoveRight = false;
-        //                enemyArr[counter].collisionRect.move(-enemyArr[counter].velocity, 0);
-        //            }
-        //        }
-
-        //        counter2++;
-        //    }
-        //    counter++;
-        //}
-
-        //// projectile-wall collision
-        //counter = 0;
-        //for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
-        //{
-        //    counter2 = 0;
-        //    for (wallIter = wallArr.begin(); wallIter != wallArr.end(); wallIter++)
-        //    {
-        //        if (projectileArr[counter].collisionRect.getGlobalBounds().intersects(wallArr[counter2].collisionRect.getGlobalBounds()))
-        //        {
-        //            
-        //            if (wallArr[counter2].destructible == true)
-        //            {
-        //                //wallCollisionSound.play(); 
-        //                wallArr[counter2].hp -= projectileArr[counter].attackDamage;
-
-        //                if (wallArr[counter2].hp <= 0)
-        //                {
-        //                    wallArr[counter2].isAlive = false;
-        //                }
-        //            }
-
-        //            projectileArr[counter].isAlive = false;
-        //        }
-
-        //        counter2++;
-        //    }
-        //    counter++;
-        //}
 
 
         // delete not alive enemy
@@ -950,49 +708,16 @@ int main()
             }
         }
 
-        // enemy AI - must be move to server
+         // draw item
         counter = 0;
-        for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
+        for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
         {
-            if (enemyArr[counter].aggroedBy == 1)
+            if (itemArr[counter].inShop == true)
             {
-                if (aggroClockElapsed.asSeconds() > 1)
-                {
-                    aggroClock.restart();
-                }
-
-                int actionNumber = generateRandom(3);
-
-                switch (actionNumber) 
-                {
-                case 1:
-                    if (player1.collisionRect.getPosition().x < enemyArr[counter].collisionRect.getPosition().x &&
-                        player1.collisionRect.getPosition().y - enemyArr[counter].collisionRect.getPosition().y <= 40)
-                    {
-                        enemyArr[counter].direction = 3;
-                    }
-                    if (player1.collisionRect.getPosition().x > enemyArr[counter].collisionRect.getPosition().x &&
-                        player1.collisionRect.getPosition().y - enemyArr[counter].collisionRect.getPosition().y <= 40)
-                    {
-                        enemyArr[counter].direction = 4;
-                    }
-                    if (player1.collisionRect.getPosition().y < enemyArr[counter].collisionRect.getPosition().y &&
-                        player1.collisionRect.getPosition().x - enemyArr[counter].collisionRect.getPosition().x <= 40)
-                    {
-                        enemyArr[counter].direction = 1;
-                    }
-                    if (player1.collisionRect.getPosition().y > enemyArr[counter].collisionRect.getPosition().y &&
-                        player1.collisionRect.getPosition().x - enemyArr[counter].collisionRect.getPosition().x <= 40)
-                    {
-                        enemyArr[counter].direction = 2;
-                    }
-                    break;
-                case 2:
-                    break;
-                default:
-                    break;
-                }
+                window.draw(itemArr[counter].text);
             }
+            itemArr[counter].update();
+            window.draw(itemArr[counter].sprite);
             counter++;
         }
 
@@ -1030,18 +755,7 @@ int main()
             counter++;
         }
 
-        // draw item
-        counter = 0;
-        for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
-        {
-            if (itemArr[counter].inShop == true)
-            {
-                window.draw(itemArr[counter].text);
-            }
-            itemArr[counter].update();
-            window.draw(itemArr[counter].sprite);
-            counter++;
-        }
+       
 
         // view player
         window.setView(view);

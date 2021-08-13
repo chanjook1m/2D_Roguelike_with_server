@@ -69,7 +69,7 @@ public:
 	{
 		if (!error && message_count_ < max_message_count)
 		{
-			timer_.expires_from_now(boost::posix_time::milliseconds(10));
+			timer_.expires_from_now(boost::posix_time::milliseconds(5));
 			timer_.async_wait(
 				boost::bind(&sender::handle_timeout, this,
 					boost::asio::placeholders::error));
@@ -1412,7 +1412,7 @@ int main()
 		std::cout << "Server is running..." << std::endl;
 		while (true)
 		{
-			//std::cout << "run" << std::endl;
+
 			// ping counter -> disconnect
 			for (int i = 0; i < players.size(); i++)
 			{
@@ -1429,14 +1429,10 @@ int main()
 						break;
 					}
 
-					if (i < players.size() && players[i].connectCounter >= 1)
+					if (players[i].connectCounter >= 1)
 					{
 						players[i].isConnected = false;
 					}
-
-
-
-
 				}
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(33));

@@ -21,15 +21,7 @@ enum types
     POWERUP,
 };
 
-sf::Packet& operator <<(sf::Packet& packet, const Player& m)
-{
-    return packet << m.id << m.velocity << m.attackDamage << m.direction << m.x << m.y << m.hp << m.powerUpLevel << m.canMoveUp << m.canMoveDown << m.canMoveLeft << m.canMoveRight << m.isAlive << m.collisionRect_x << m.collisionRect_y << m.projectile_x << m.projectile_y << m.shooted << m.projectileAlive;
-}
 
-sf::Packet& operator >>(sf::Packet& packet, Player& m)
-{
-    return packet >> m.id >> m.velocity >> m.attackDamage >> m.direction >> m.x >> m.y >> m.hp >> m.powerUpLevel >> m.canMoveUp >> m.canMoveDown >> m.canMoveLeft >> m.canMoveRight >> m.isAlive >> m.collisionRect_x >> m.collisionRect_y >> m.projectile_x >> m.projectile_y >> m.shooted >> m.projectileAlive;
-}
 
 int main()
 {
@@ -39,14 +31,29 @@ int main()
     
     std::vector <Player> enemies;
     vector<Player>::const_iterator playerIter;
-    
-    Player player1(24, 32);
-    player1.isMainPlayer = true;
 
+    sf::Font maumFont;
+    if (!maumFont.loadFromFile(RESOURCE_DIR + "godoMaum.ttf"))
+    {
+        return EXIT_FAILURE;
+    }
+
+    sf::Texture playerTexture;
+    if (!playerTexture.loadFromFile(RESOURCE_DIR + "rpg_sprite_walk.png"))
+    {
+        return EXIT_FAILURE;
+    }
+
+    Player player1(24, 32);
+    player1.text.setFont(maumFont);
+    player1.text.setPosition(295, 370);
+    player1.isMainPlayer = true;
+    player1.sprite.setTexture(playerTexture);
+    
     // client
     static int request_id = 1;
 
-    
+
     net::AsyncTCPClient client;
 
     client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 0);
@@ -54,10 +61,14 @@ int main()
     std::this_thread::sleep_for(std::chrono::seconds(5));
     std::cout << "status: " << (net::connected ? "connected" : "not connected") << std::endl;
     if (net::connected)
-        player1.id = net::id; 
-    
+    {
+        player1.id = net::id;
+    }
+
 
     std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    
+    
 
     //client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
     //
@@ -69,11 +80,7 @@ int main()
     view.setCenter(sf::Vector2f(view.getSize().x/2, view.getSize().y/2));
     window.setView(view);
 
-    sf::Texture playerTexture;
-    if (!playerTexture.loadFromFile(RESOURCE_DIR + "rpg_sprite_walk.png")) 
-    {
-        return EXIT_FAILURE;
-    }
+    
 
     sf::Texture enemyTexture;
     if (!enemyTexture.loadFromFile(RESOURCE_DIR + "goblin.png")) 
@@ -103,11 +110,7 @@ int main()
     sf::Sprite energyBallSprite;
     energyBallSprite.setScale(sf::Vector2f(0.1, 0.1));
 
-    sf::Font maumFont;
-    if (!maumFont.loadFromFile(RESOURCE_DIR + "godoMaum.ttf")) 
-    {
-        return EXIT_FAILURE;
-    }
+    
 
     sf::SoundBuffer shotBuffer;
     if (!shotBuffer.loadFromFile(RESOURCE_DIR + "shot.ogg"))
@@ -170,8 +173,7 @@ int main()
     backgroundSound.play();
 
     //
-
-    player1.sprite.setTexture(playerTexture);
+    
     
 
     vector<Projectile>::const_iterator projectileIter;
@@ -251,6 +253,7 @@ int main()
     sf::Clock aggroClock;
 
     //
+    
 
     boost::asio::io_context udp_io_context;
     
@@ -267,6 +270,8 @@ int main()
     bool enemyUpdate = false;
     bool update = false;
     Player enem(24, 32);
+    enem.text.setFont(maumFont);
+    
     while (window.isOpen())
     {
         //// receive update game packet
@@ -747,7 +752,7 @@ int main()
             counter++;
         }
 
-        // draw enemy
+        // draw enemy Monster
         counter = 0;
         for (enemyIter = enemyArr.begin(); enemyIter != enemyArr.end(); enemyIter++)
         {
@@ -777,14 +782,18 @@ int main()
         view.setCenter(player1.collisionRect.getPosition());
 
         // draw player , scoreText
+        player1.text.setString("id : " + to_string(player1.id));
+        window.draw(player1.text);
         window.draw(player1.sprite);
 
         for (size_t i = 0; i < enemies.size(); i++)
         {
          
-            std::cout << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
+            //std::cout << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
+            enemies[i].text.setString("id : " + to_string(enemies[i].id));
             enemies[i].update();
 //            enemies[i].sprite.setPosition(enemies[i].collisionRect_x, enemies[i].collisionRect_y);
+            window.draw(enemies[i].text);
             window.draw(enemies[i].sprite);
             //
             

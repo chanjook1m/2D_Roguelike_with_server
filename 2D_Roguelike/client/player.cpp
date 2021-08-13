@@ -22,6 +22,7 @@ void Player::update()
 {
     move();
 	sprite.setPosition(collisionRect.getPosition());
+    text.setPosition(collisionRect.getPosition().x - 5, collisionRect.getPosition().y - 30);
 }
 
 void Player::move()

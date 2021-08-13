@@ -16,11 +16,7 @@ typedef void (*Callback) (unsigned int request_id,
 namespace net
 {
 	bool connected = false;
-	std::vector<Player> players;
-	std::vector<Projectile> projectiles;
-	std::vector<Enemy> enemies;
-	std::vector<Item> items;
-	std::vector<Wall> walls;
+	
 
 	int id;
 	//int packetSize = 700;
@@ -71,7 +67,7 @@ namespace net
 		}
 		else
 		{
-			std::cout << "Response : " << response << std::endl;
+			//std::cout << "Response : " << response << std::endl;
 		}
 
 		return;
@@ -160,6 +156,7 @@ namespace net
 							{
 								std::cout << "connect start " << std::endl;
 								
+								// read connect response from server start
 								boost::asio::async_read_until(session->m_sock,
 									session->m_request_buf,
 									//boost::regex("[0-9]+"),
@@ -169,22 +166,18 @@ namespace net
 									{
 										if (ec)
 										{
-											std::cout << "Read" << std::endl;
+											std::cout << "read connect response from server error" << std::endl;
 											session->m_ec = ec;
 										}
 										else
 										{
-											std::cout << "Read222222" << std::endl;
+											std::cout << "read connect response from server success" << std::endl;
 											
 											boost::asio::streambuf::const_buffers_type bufs = session->m_request_buf.data();
 											std::string str(boost::asio::buffers_begin(bufs),
 												boost::asio::buffers_begin(bufs) + bufs.size());
 										
-
-											//session->m_request_buf.consume(session->m_request_buf.max_size());
-										/*	net::LoginPacket pack;
-											pack.load(str);*/
-											std::cout << " str -> " << str << std::endl;
+											//std::cout << " str -> " << str << std::endl;
 											// For atoi, the input string has to start with a digit, so lets search for the first digit
 											size_t i = 0;
 											for (; i < str.length(); i++) { if (str[i]>=48 && str[i] <= 57) break; }
@@ -194,50 +187,20 @@ namespace net
 
 											// convert the remaining text to an integer
 											int netId = atoi(str.c_str());
-											std::cout << " id -> " << netId << std::endl;
+											std::cout << " player id : " << netId << std::endl;
 											if (netId)//str == "connected")
 											{
 												connected = true;
 												id = netId;
 												
 											}
-											//	std::cout << "id: " <<std::stoi(str) << std::endl;
-											//}
-											//else
-											//{
-											//	ServerPacket pack;
-											//	pack.load(str);
-											//	players = pack.players;	
-											//	//std::cout << "Request2 : " << players[0].collisionRect_x << " : " << players[0].collisionRect_y << std::endl;
-											//	std::string response = str;
-											//}
-
-											//std::istream stream(&session->m_response_buf);
-											//std::getline(stream, session->m_response);
+											
 										}
 
 										onRequestComplete(session);
 									});
 							}
-							/*
-												boost::asio::async_read_until(session->m_sock,
-													session->m_response_buf,
-													'\n',
-													[this, session](const boost::system::error_code& ec,
-														std::size_t bytes_transferred)
-													{
-														if (ec)
-														{
-															session->m_ec = ec;
-														}
-														else
-														{
-															std::istream stream(&session->m_response_buf);
-															std::getline(stream, session->m_response);
-														}
-
-														onRequestComplete(session);
-													});*/
+							
 						});
 				});
 		};
@@ -248,7 +211,7 @@ namespace net
 			Callback callback,
 			unsigned int request_id)
 		{
-			std::string request = "Operation " + std::to_string(duration_sec) + "\n";
+			std::string request = "";
 
 			std::shared_ptr<Session> session =
 				std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
@@ -260,18 +223,19 @@ namespace net
 			m_active_sessions[request_id] = session;
 			lock.unlock();
 
-			std::cout << "go" << std::endl;
+			std::cout << "connect request start" << std::endl;
 			session->m_sock.async_connect(session->m_ep,
 				[&, session](const boost::system::error_code& ec)
 				{
 					if (ec)
 					{
-						std::cout << "Read33333" << std::endl;
+						std::cout << "connect request error" << std::endl;
 						session->m_ec = ec;
 						onRequestComplete(session);
 						return;
 					}
-					std::cout << "go2" << std::endl;
+					std::cout << "connect request success" << std::endl;
+					std::cout << "read connect reqeust response start" << std::endl;
 					boost::asio::async_read_until(session->m_sock,
 						session->m_response_buf,
 						//boost::asio::transfer_at_least(packetSize),
@@ -281,22 +245,17 @@ namespace net
 						{
 							if (ec)
 							{
-								std::cout << "Read" << std::endl;
+								std::cout << "read connect reqeust response error" << std::endl;
 								session->m_ec = ec;
 							}
 							else
 							{
-								std::cout << "Read222222" << std::endl;
+								std::cout << "read connect reqeust response success" << std::endl;
 								boost::asio::streambuf::const_buffers_type bufs = session->m_response_buf.data();
 								std::string str(boost::asio::buffers_begin(bufs),
 									boost::asio::buffers_begin(bufs) + bufs.size());
 
-									
-								/*std::cout << "strstr " << packetSize << std::endl;
-								if (bufs.size() >= 900 && packetSize < bufs.size())
-									packetSize += 200;
-								else if (packetSize > bufs.size() && packetSize >= 700)
-									packetSize = 700;*/
+								
 								ServerPacket pack;
 
 								pack.load(str);
@@ -307,14 +266,8 @@ namespace net
 								items = pack.items;
 								walls = pack.walls;
 								
-								std::cout << "--->Request2 : " << enemies.size() << std::endl;
-								
-								
-								
-								//std::string response = str;	
-								
-								//std::istream stream(&session->m_response_buf);
-								//std::getline(stream, session->m_response);
+								//std::cout << "--->Request2 : " << enemies.size() << std::endl;
+
 							}
 
 							onRequestComplete(session);

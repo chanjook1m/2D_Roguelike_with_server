@@ -14,7 +14,6 @@
 
 namespace net
 {
-	
 	bool generateRandomBool()
 	{
 		int randomNumber = rand();
@@ -647,10 +646,10 @@ namespace net
 			os << "Message " << str;
 			message_ = os.str();*/
 
-			socket_.async_send_to(
+			/*socket_.async_send_to(
 				boost::asio::buffer(message_), endpoint_,
 				boost::bind(&sender::handle_send_to, this,
-					boost::asio::placeholders::error));
+					boost::asio::placeholders::error));*/
 		}
 
 		void handle_send_to(const boost::system::error_code& error)
@@ -703,12 +702,6 @@ namespace net
 		std::string message_;
 	};
 
-	std::vector<Player> players;
-	std::vector<Projectile> projectiles;
-	std::vector<Enemy> enemies;
-	std::vector<Item> items;
-	std::vector<Wall> walls;
-
 	class receiver
 	{
 	public:
@@ -753,20 +746,13 @@ namespace net
 				//std::stringstream buffer;
 				//buffer << data_ << std::endl;
 				std::string str = convertToString(data_, bytes_recvd);
-				//std::cout << "aa " << str << std::endl;
-				
+				std::cout << "aa " << str << std::endl;
 
 
 				net::ServerPacket pack;
 
 				pack.load(str);
-				players = pack.players;
-				projectiles = pack.projectiles;
-				enemies = pack.enemies;
-				items = pack.items;
-				walls = pack.walls;
-				std::cout << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-				std::cout << "--->Request2 : " << pack.walls.size() << std::endl;
+				std::cout << "--->Request2 : " << pack.players[0].id << std::endl;
 
 				socket_.async_receive_from(
 					boost::asio::buffer(data_, max_length), sender_endpoint_,

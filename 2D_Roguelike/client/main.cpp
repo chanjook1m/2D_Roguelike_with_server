@@ -250,14 +250,27 @@ int main()
     sf::Clock playerCollisionClock;
     sf::Clock aggroClock;
 
-    // run the program as long as the window is open
+    //
+
+    boost::asio::io_context udp_io_context;
+    
+    
+    std::unique_ptr<std::thread> th(new std::thread([&]()
+        {
+            net::receiver r(udp_io_context,
+                boost::asio::ip::address::from_string("0.0.0.0"),
+                boost::asio::ip::address::from_string("239.255.0.1"));
+            udp_io_context.run();
+        }));
+
+    // main loop - run the program as long as the window is open
     bool enemyUpdate = false;
     bool update = false;
     Player enem(24, 32);
     while (window.isOpen())
     {
         //// receive update game packet
-        client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
+        //client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
         client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
 

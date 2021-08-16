@@ -13,6 +13,8 @@
 
 #include "net.hpp"
 
+
+
 enum types
 {
 	COIN = 1,
@@ -40,7 +42,6 @@ int counter, counter2;
 
 
 const short multicast_port = 30001;
-const int max_message_count = 10;
 
 class sender
 {
@@ -52,13 +53,6 @@ public:
 		timer_(io_context),
 		message_count_(0)
 	{
-
-
-		//
-		/*std::ostringstream os;
-		os << "Message " << str;
-		message_ = os.str();*/
-
 		socket_.async_send_to(
 			boost::asio::buffer(message_), endpoint_,
 			boost::bind(&sender::handle_send_to, this,
@@ -67,9 +61,9 @@ public:
 
 	void handle_send_to(const boost::system::error_code& error)
 	{
-		if (!error && message_count_ < max_message_count)
+		if (!error)
 		{
-			timer_.expires_from_now(boost::posix_time::milliseconds(5));
+			timer_.expires_from_now(boost::posix_time::milliseconds(10));
 			timer_.async_wait(
 				boost::bind(&sender::handle_timeout, this,
 					boost::asio::placeholders::error));
@@ -89,7 +83,6 @@ public:
 				{
 					if (net::detectCollision(players[j], items[i]))
 					{
-						std::cout << "<<<<<<<<<<<<< powerup " << items[i].type << std::endl;
 						if (items[i].inShop == false)
 						{
 							if (items[i].type == COIN)
@@ -175,14 +168,11 @@ public:
 				// projectile - wall collision
 				for (int j = 0; j < projectiles.size(); j++)
 				{
-					//std::cout << "wall-> " << walls[i].collisionRect_x << " , " << projectiles[j].collisionRect_x + projectiles[j].width << std::endl; // ", " << walls[i].collisionRect_y << std::endl;
-					//std::cout << "projectile-> " << walls[i].collisionRect_x + walls[i].width << " , " << projectiles[j].collisionRect_x << std::endl;// << ", " << projectiles[j].collisionRect_y << std::endl;
 					if (net::detectCollision(walls[i], projectiles[j]))
 					{
 
 
 						projectiles[j].isAlive = false;
-						std::cout << " xxxxxxxxx projectile state ------> : " << projectiles[j].isAlive << std::endl;
 						if (walls[i].destructible == true)
 						{
 							walls[i].hp -= projectiles[j].attackDamage;
@@ -202,10 +192,8 @@ public:
 			}
 
 			// projectile
-			// std::cout << "projectile size : " << projectiles.size() << std::endl;
 			for (int i = 0; i < projectiles.size(); i++)
 			{
-				//			std::cout << projectiles[i].collisionRect_x << " : " << projectiles[i].collisionRect_y << std::endl;
 				projectiles[i].update();
 
 				// projectile - enemy collision
@@ -252,7 +240,6 @@ public:
 			for (int i = 0; i < enemies.size(); i++)
 			{
 				enemies[i].update();
-				//std::cout << "enem up ---->: " << enemies[i].direction << " --: " << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
 
 				// enemyMonster - player collision
 				for (int j = 0; j < players.size(); j++)
@@ -271,10 +258,15 @@ public:
 					{
 						players[j].hp -= enemies[i].attackDamage;
 
+						if (players[j].hp < 0)
+							players[j].hp = 0;
+
 						if (players[j].powerUpLevel > 1)
 						{
 							players[j].powerUpLevel--;
 						}
+
+
 					}
 				}
 
@@ -318,7 +310,6 @@ public:
 
 					if (random == 1)
 					{
-						std::cout << ">>>>>>>>>>>>> item created ???????" << std::endl;
 						item.collisionRect_x = enemies[i].collisionRect_x;
 						item.collisionRect_y = enemies[i].collisionRect_y;
 						item.type = COIN;
@@ -354,14 +345,12 @@ public:
 			if (walls.size() > 0)
 				pack.walls = walls;
 
-			std::cout << "player size : " << players.size() << std::endl;
-			std::cout << "enemy size : " << enemies.size() << std::endl;
-			std::cout << "wall size : " << walls.size() << std::endl;
-			std::cout << "item size : " << items.size() << std::endl;
-			//std::cout << pack.players[0].collisionRect_x << ":" << pack.players[0].collisionRect_y << std::endl;
-			/*net::Projectile pj;
-			pj.id = 4;
-			pack.projectiles.push_back(pj);*/
+			std::cout << "[INFO] player size : " << players.size() << std::endl;
+			std::cout << "[INFO] projectile size : " << projectiles.size() << std::endl;
+			std::cout << "[INFO] enemy size : " << enemies.size() << std::endl;
+			std::cout << "[INFO] wall size : " << walls.size() << std::endl;
+			std::cout << "[INFO] item size : " << items.size() << std::endl;
+
 
 			std::ostream oss(&buf);
 
@@ -370,7 +359,6 @@ public:
 			std::string str(boost::asio::buffers_begin(bufs),
 				boost::asio::buffers_begin(bufs) + bufs.size());
 			message_ = str;//"response...";
-			std::cout << "response: " << "a" << std::endl;
 			//m_response += "\r\n";
 			socket_.async_send_to(
 				boost::asio::buffer(message_), endpoint_,
@@ -399,7 +387,6 @@ public:
 
 	void StartHandling()
 	{
-		std::cout << "handling1 " << clients.size() << std::endl;
 		boost::asio::async_read(*m_sock.get(),
 			m_request,
 			boost::asio::transfer_at_least(1),
@@ -414,8 +401,6 @@ public:
 
 	void StartHandling2()
 	{
-		std::cout << "handling2 - " << clients.size() << " - " << players.size() << std::endl;
-
 		// update objects
 		// items
 		for (int i = 0; i < items.size(); i++)
@@ -425,7 +410,6 @@ public:
 			{
 				if (net::detectCollision(players[j], items[i]))
 				{
-					std::cout << "<<<<<<<<<<<<< powerup " << items[i].type << std::endl;
 					if (items[i].inShop == false)
 					{
 						if (items[i].type == COIN)
@@ -511,14 +495,11 @@ public:
 			// projectile - wall collision
 			for (int j = 0; j < projectiles.size(); j++)
 			{
-				//std::cout << "wall-> " << walls[i].collisionRect_x << " , " << projectiles[j].collisionRect_x + projectiles[j].width << std::endl; // ", " << walls[i].collisionRect_y << std::endl;
-				//std::cout << "projectile-> " << walls[i].collisionRect_x + walls[i].width << " , " << projectiles[j].collisionRect_x << std::endl;// << ", " << projectiles[j].collisionRect_y << std::endl;
 				if (net::detectCollision(walls[i], projectiles[j]))
 				{
 
 
 					projectiles[j].isAlive = false;
-					std::cout << " xxxxxxxxx projectile state ------> : " << projectiles[j].isAlive << std::endl;
 					if (walls[i].destructible == true)
 					{
 						walls[i].hp -= projectiles[j].attackDamage;
@@ -538,10 +519,8 @@ public:
 		}
 
 		// projectile
-		// std::cout << "projectile size : " << projectiles.size() << std::endl;
 		for (int i = 0; i < projectiles.size(); i++)
 		{
-			//			std::cout << projectiles[i].collisionRect_x << " : " << projectiles[i].collisionRect_y << std::endl;
 			projectiles[i].update();
 
 			// projectile - enemy collision
@@ -588,7 +567,6 @@ public:
 		for (int i = 0; i < enemies.size(); i++)
 		{
 			enemies[i].update();
-			//std::cout << "enem up ---->: " << enemies[i].direction << " --: " << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
 
 			// enemyMonster - player collision
 			for (int j = 0; j < players.size(); j++)
@@ -654,7 +632,6 @@ public:
 
 				if (random == 1)
 				{
-					std::cout << ">>>>>>>>>>>>> item created ???????" << std::endl;
 					item.collisionRect_x = enemies[i].collisionRect_x;
 					item.collisionRect_y = enemies[i].collisionRect_y;
 					item.type = COIN;
@@ -690,14 +667,12 @@ public:
 		if (walls.size() > 0)
 			pack.walls = walls;
 
-		std::cout << "player size : " << players.size() << std::endl;
-		std::cout << "enemy size : " << enemies.size() << std::endl;
-		std::cout << "wall size : " << walls.size() << std::endl;
-		std::cout << "item size : " << items.size() << std::endl;
-		//std::cout << pack.players[0].collisionRect_x << ":" << pack.players[0].collisionRect_y << std::endl;
-		/*net::Projectile pj;
-		pj.id = 4;
-		pack.projectiles.push_back(pj);*/
+		std::cout << "[INFO] player size : " << players.size() << std::endl;
+		std::cout << "[INFO] projectile size : " << projectiles.size() << std::endl;
+		std::cout << "[INFO] enemy size : " << enemies.size() << std::endl;
+		std::cout << "[INFO] wall size : " << walls.size() << std::endl;
+		std::cout << "[INFO] item size : " << items.size() << std::endl;
+
 
 		std::ostream oss(&buf);
 
@@ -707,12 +682,9 @@ public:
 			boost::asio::buffers_begin(bufs) + bufs.size());
 		m_response = str;//"response...";
 		m_response += "\r\n";
-		std::cout << "asdfadsfsafdasfdfasd " << str.size() << std::endl;
-		//m_response = "1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 		for (int i = 0; i < clients.size(); i++)
 		{
 			std::shared_ptr<boost::asio::ip::tcp::socket> client = clients[i];
-			//std::cout << " ----- > " << clients.size() << std::endl;
 			boost::asio::async_write(*client.get(),
 				boost::asio::buffer(m_response),
 				[this, client](const boost::system::error_code& ec,
@@ -722,15 +694,13 @@ public:
 					if (ec)
 					{
 						std::cout << "async_write Error : " << ec.message() << std::endl;
-						//if ()
 					}
 					else
 					{
 						try
 						{
-							std::cout << "Sent : " << bytes_transferred << std::endl;
+							//std::cout << "Sent : " << bytes_transferred << std::endl;
 
-							//clients.erase(std::remove(clients.begin(), clients.end(), client), clients.end());
 							if (clients.size() > 2)
 							{
 								for (std::vector<std::shared_ptr<boost::asio::ip::tcp::socket>>::iterator iter = clients.begin(); iter != clients.end(); ++iter)
@@ -762,36 +732,6 @@ private:
 		{
 			std::cout << "onRequestReceived Error : " << ec.message() << std::endl;
 
-			//			if (boost::asio::error::connection_reset == ec)
-			//			{
-			//				for (int i = 0; i < players.size(); i++)
-			//				{
-			//					//std::cout << clients[i]->remote_endpoint().port() << std::endl;
-			//					//std::cout << players[0].port << std::endl;
-			//					if (players[i].port == m_sock->remote_endpoint().port())
-			//					{
-			//						std::cout << ">>>>>>>> deleted >>>>>>>" << std::endl;
-			//						players.erase(players.begin() + i);
-			//					}
-			//				}
-			//				m_sock->close();
-			//
-			//				clients.erase(std::remove(clients.begin(), clients.end(), m_sock), clients.end());
-			//			}
-			//			//m_sock->close();
-			//		
-			////			clients.erase(std::remove(clients.begin(), clients.end(), m_sock), clients.end());
-			//			
-			//			//for (int i = 0; i < players.size(); i++)
-			//			//{
-			//			////	
-			//			//	if (players[i].port == )
-			//			//	{
-			//			////		std::cout << "player deleted" << std::endl;
-			//			////		//players.erase(players.begin() + i);
-			//			////		
-			//			//	}
-			//			//}
 			onFinish();
 			return;
 		}
@@ -803,16 +743,6 @@ private:
 			m_response = std::to_string(id);
 			m_response += "\r\n";
 
-			//boost::asio::streambuf buf;
-			//net::LoginPacket pack;
-			//pack.id = 11	;
-
-			//std::ostream oss(&buf);
-			//pack.save(oss);
-			//boost::asio::streambuf::const_buffers_type bufs = buf.data();
-			//std::string str(boost::asio::buffers_begin(bufs),
-			//	boost::asio::buffers_begin(bufs) + bufs.size());
-			//m_response = str;//"response...";
 
 			net::Player newPlayer = net::Player();
 			newPlayer.id = id++;
@@ -821,17 +751,29 @@ private:
 
 			if (players.size() == 0)
 				players.push_back(newPlayer);
-
-			for (int i = 0; i < players.size(); i++)
+			else
 			{
-				bool found = false;
-				if (newPlayer.id == players[i].id)
+
+				try
 				{
-					found = true;
+					bool found = false;
+					for (int i = 0; i < players.size(); i++)
+					{
+						players.at(i);
+
+						if (newPlayer.id == players[i].id)
+						{
+							found = true;
+
+						}
+					}
+					if (found == false)
+						players.push_back(newPlayer);
+				}
+				catch (int e)
+				{
 
 				}
-				if (found == false)
-					players.push_back(newPlayer);
 			}
 
 
@@ -843,11 +785,11 @@ private:
 				{
 					if (ec)
 					{
-						std::cout << "ERror..." << std::endl;
+						std::cout << "Error..." << std::endl;
 					}
 					else
 					{
-						std::cout << "Sent" << std::endl;
+						//std::cout << "Sent" << std::endl;
 						onResponseSent(ec, bytes_transferred);
 					}
 				});
@@ -882,17 +824,17 @@ private:
 		boost::asio::streambuf::const_buffers_type bufs = request.data();
 		std::string str(boost::asio::buffers_begin(bufs),
 			boost::asio::buffers_begin(bufs) + bufs.size());
-		std::cout << "Request : " << str << std::endl;
+		std::cout << "[CLIENT REQUEST] Request : " << str << std::endl;
 		std::string response;
 		if (str == "connect")
 		{
 			response = "connected";
-			std::cout << response << std::endl;
+			//std::cout << response << std::endl;
 		}
 		else if (str.find("id_") != std::string::npos)
 		{
 			response = "ping";
-			std::cout << "Response :: " << response << std::endl;
+			//std::cout << "Response :: " << response << std::endl;
 
 			size_t i = 0;
 			for (; i < str.length(); i++) { if (isdigit(str[i])) break; }
@@ -903,17 +845,14 @@ private:
 			// convert the remaining text to an integer
 			int id = atoi(str.c_str());
 
-			std::cout << "id :: " << id << std::endl;
+			std::cout << "[INFO] connectino with player - " << id << " alive" << std::endl;
 
 			for (int i = 0; i < players.size(); i++)
 			{
-				std::cout << "gogo" << std::endl;
-
 				if (players[i].id == id)
 				{
 					players[i].isConnected = true;
 					players[i].connectCounter = 1;
-					std::cout << "CONNECTEDAAAAAA " << players[i].isConnected << std::endl;
 				}
 			}
 			std::cout << m_sock->remote_endpoint().port() << std::endl;
@@ -922,7 +861,7 @@ private:
 		{
 			net::ClientPacket p;
 			p.load(str);
-			std::cout << "Request2 : " << p.key << " " << p.player_id << std::endl;
+			//std::cout << "Request2 : " << p.key << " " << p.player_id << std::endl;
 
 			if (p.key >= 1 && p.key <= 4)
 			{
@@ -931,14 +870,13 @@ private:
 					if (p.player_id == players[i].id)
 					{
 						players[i].direction = p.key;
-						//std::cout << players[i].collisionRect_x << ":" << players[i].collisionRect_y << std::endl;
 						players[i].update();
+
 						// players - wall collision
 						for (int j = 0; j < walls.size(); j++)
 						{
 							if (net::detectCollision(players[i], walls[j]))
 							{
-								std::cout << "alksdfjlasdkfjklasfjklafjkja collision " << std::endl;
 								if (players[i].direction == 1)
 								{
 									players[i].canMoveUp = false;
@@ -962,14 +900,13 @@ private:
 							}
 						}
 						break;
-						//std::cout << players[i].collisionRect_x << ":" << players[i].collisionRect_y << std::endl;
 					}
 				}
 			}
 			else if (p.key == 5)
 			{
 
-				int random = net::generateRandom(30);
+				int random = net::generateRandom(3);
 				projectile.id = p.player_id;
 				projectile.isAlive = true;
 				int counter = 0;
@@ -1001,9 +938,6 @@ private:
 
 			response = str;
 		}
-		/*PlayerData p;
-		p.load(str);
-		std::cout << "Request2 : " << p.a[2] << " " <<  std::endl;*/
 
 		return response;
 	}
@@ -1064,43 +998,14 @@ private:
 		{
 
 			(new Service(sock))->StartHandling();
-			//(new Service(sock))->StartHandling2();
+			//(new Service(sock))->StartHandling2(); // tcp game world send
 
-			//// ping counter -> disconnect
-			//for (int i = 0; i < players.size(); i++)
-			//{
-			//	players[i].connectCounter++;
-
-			//	if (players[i].connectCounter++ > players[i].connectDelay)
-			//	{
-			//		players[i].connectCounter = 0;
-			//		
-			//		if (players[i].isConnected == false)
-			//		{
-			//			// disconnect
-			//			players.erase(players.begin() + i);
-			//			std::cout << i << " - disconnected <<" << std::endl;
-			//		}
-			//		
-			//	}
-			//}
-
-			//std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			if (!m_isStopped.load())
 			{
 				InitAccept();
 			}
 
 		}
-
-		//if (!m_isStopped.load())
-		//{
-		//	InitAccept();
-		//}
-		//else
-		//{
-		//	//m_acceptor.close();
-		//}
 	}
 private:
 	boost::asio::io_context& m_io;
@@ -1362,11 +1267,13 @@ public:
 		enemy.isAlive = true;
 		enemy.maxHp = 100;
 		enemy.hp = 100;
+		enemy.isBoss = true;
 		enemy.attackDamage = 10;
 		enemy.temp_x = enemy.collisionRect_x = 50 * bossRoomSize / 2 + initialRoomX + (bossRoomSize * 50 * 2) + 100;
 		enemy.temp_y = enemy.collisionRect_y = (bossRoomSize / 2 * 50) + 50 + initialRoomY;
 		enemy.id = enemy_id++;
 		enemies.push_back(enemy);
+		enemy.isBoss = false;
 	}
 
 private:
@@ -1423,7 +1330,7 @@ int main()
 					if (players[i].isConnected == false)
 					{
 						// disconnect
-						std::cout << players[i].id << " - disconnected <<" << std::endl;
+						std::cout << "[INFO] " << players[i].id << " - disconnected <<" << std::endl;
 						players.erase(players.begin() + i);
 
 						break;
@@ -1437,15 +1344,7 @@ int main()
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		}
-		//{
-		//	//std::cout << "Sending..." << clients.size() << std::endl;
-		//	for (int i = 0; i < clients.size(); i++)
-		//	{
-		//		
-		//		(new Service(clients[i]))->StartHandling2();
-		//	}
-		//	std::this_thread::sleep_for(std::chrono::milliseconds(33));
-		//}
+
 		std::this_thread::sleep_for(std::chrono::seconds(36000));
 
 		server.Stop();

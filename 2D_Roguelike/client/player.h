@@ -23,6 +23,8 @@ public:
 
 	int collisionRect_x = 300;
 	int collisionRect_y = 400;
+
+	int virtualKeyPressed = 0;
 	
 	bool updated = false;
 	bool isMainPlayer = false;

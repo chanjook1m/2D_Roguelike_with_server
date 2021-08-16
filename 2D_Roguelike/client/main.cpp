@@ -13,6 +13,9 @@
 #include "animatedGIF.h"
 #include "client_interface.hpp"
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
+
+#define STRESS_TEST true
+
 using namespace std;
 
 enum types
@@ -20,8 +23,6 @@ enum types
     COIN = 1,
     POWERUP,
 };
-
-
 
 int main()
 {
@@ -59,7 +60,7 @@ int main()
     client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 0);
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
-    std::cout << "status: " << (net::connected ? "connected" : "not connected") << std::endl;
+    std::cout << "[INFO] connection status: " << (net::connected ? "connected" : "not connected") << std::endl;
     if (net::connected)
     {
         player1.id = net::id;
@@ -72,13 +73,19 @@ int main()
 
     //client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
     //
+
+    
     sf::RenderWindow window(sf::VideoMode(1000, 800), "My RPG");
     window.setFramerateLimit(60);
-
+    
     sf::View view(sf::FloatRect(200, 200, 300, 200));
     view.setSize(sf::Vector2f(window.getSize().x, window.getSize().y));
-    view.setCenter(sf::Vector2f(view.getSize().x/2, view.getSize().y/2));
+    view.setCenter(sf::Vector2f(view.getSize().x / 2, view.getSize().y / 2));
     window.setView(view);
+
+    if (STRESS_TEST == true)
+        window.setVisible(false);
+    
 
     
 
@@ -172,10 +179,8 @@ int main()
     backgroundSound.setVolume(20.f);
     backgroundSound.play();
 
-    //
+    // objects and objects array
     
-    
-
     vector<Projectile>::const_iterator projectileIter;
     vector<Projectile> projectileArr;
     Projectile projectile;
@@ -189,9 +194,6 @@ int main()
     enemy.sprite.setTexture(enemyTexture);
     enemy.text.setFont(maumFont);
     enemy.text.setFillColor(sf::Color::Red);
-    //enemyArr.push_back(enemy);
-
-    
 
     vector<Item>::const_iterator itemIter;
     vector<Item> itemArr;
@@ -199,8 +201,6 @@ int main()
     Item item(10,10, 200, 150, COIN);
     item.sprite.setTexture(coinTexture);
     item.sprite.setScale(sf::Vector2f(0.2, 0.2));
-    //item.collisionRect.setPosition(500, 500);
-    //itemArr.push_back(item);
 
     vector<Wall>::const_iterator wallIter;
     vector<Wall> wallArr;
@@ -210,25 +210,26 @@ int main()
     wall.sprite.setTexture(wallTexture);
     wall.sprite.setScale(3.0, 3.0);
 
-    // create room
-    int roomSize = 10;
-    int bossRoomSize = 15;
-    int verticalDoorAt = 2;
-    int horizontalDoorAt = 2;
-    int initialRoomX = 200;
-    int initialRoomY = 300;
+    //// create room
+    //int roomSize = 10;
+    //int bossRoomSize = 15;
+    //int verticalDoorAt = 2;
+    //int horizontalDoorAt = 2;
+    //int initialRoomX = 200;
+    //int initialRoomY = 300;
 
-    // generate shop item
-    item = Item(0, 0, 100, 100, POWERUP);
+    //// generate shop item
+    //item = Item(0, 0, 100, 100, POWERUP);
 
     Enemy boss(48 * 6, 0, 48, 48);
     boss.sprite.setTexture(enemyTexture);
     boss.text.setFont(maumFont);
-    boss.maxHp = 100;
+    boss.text.setFillColor(sf::Color::Red);
+    /*boss.maxHp = 100;
     boss.hp = 100;
     boss.attackDamage = 10;
-    boss.collisionRect.setPosition(50 * bossRoomSize/2 + initialRoomX + (bossRoomSize * 50 * 2) + 100, (bossRoomSize/2 * 50) + 50 + initialRoomY);
-    boss.text.setFillColor(sf::Color::Red);
+    boss.collisionRect.setPosition(50 * bossRoomSize/2 + initialRoomX + (bossRoomSize * 50 * 2) + 100, (bossRoomSize/2 * 50) + 50 + initialRoomY);*/
+    
     //enemyArr.push_back(boss);
 
     vector<IngameText>::const_iterator ingameTextIter;
@@ -252,12 +253,18 @@ int main()
     sf::Clock playerCollisionClock;
     sf::Clock aggroClock;
 
-    //
-    
+    sf::Time projectileClockElapsed = projectileClock.getElapsedTime();
+    sf::Time playerCollisionClockElapsed = playerCollisionClock.getElapsedTime();
+    sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
+
+    bool enemyUpdate = false;
+    bool update = false;
+    Player enem(24, 32);
+    enem.text.setFont(maumFont);
+
+    // udp thread - recv game world packet
 
     boost::asio::io_context udp_io_context;
-    
-    
     std::unique_ptr<std::thread> th(new std::thread([&]()
         {
             net::receiver r(udp_io_context,
@@ -267,11 +274,6 @@ int main()
         }));
 
     // main loop - run the program as long as the window is open
-    bool enemyUpdate = false;
-    bool update = false;
-    Player enem(24, 32);
-    enem.text.setFont(maumFont);
-    
     while (window.isOpen())
     {
         //// receive update game packet
@@ -281,12 +283,12 @@ int main()
 
         std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
-        std::cout << "ID : " << player1.id << std::endl;
+        std::cout << "[INFO] PLAYER ID : " << player1.id << std::endl;
 
         // update players
         for (int i = 0; i < net::players.size(); i++)
         {
-            std::cout << "ID2 : " << net::players[i].id << std::endl;
+            //std::cout << "ID2 : " << net::players[i].id << std::endl;
             if (net::players[i].id == player1.id)
             {
                 player1.isAlive = net::players[i].isAlive;
@@ -309,8 +311,8 @@ int main()
             {
                 for (size_t j = 0; j < enemies.size(); j++)
                 {
-                    std::cout << "enem player id : " << enemies[j].id << std::endl;
-                    std::cout << "enem size : " << enemies.size() << std::endl;
+                    //std::cout << "enem player id : " << enemies[j].id << std::endl;
+                    //std::cout << "[INFO] enem size : " << enemies.size() << std::endl;
                     if (enemies[j].id == net::players[i].id)
                     {
                         //std::cout << "enemy update - " << net::players[i].direction << std::endl;
@@ -330,35 +332,6 @@ int main()
                 
                         enemies[j].collisionRect.setPosition(net::players[i].collisionRect_x, net::players[i].collisionRect_y);
                         enemyUpdate = true;
-                        break;
-                        /*bool hasProjectile = false;
-                        if (player.projectileAlive)
-                        {
-                            counter = 0;
-                            for (projectileIter = projectileArr.begin(); projectileIter != projectileArr.end(); projectileIter++)
-                            {
-                                if (player.id == projectileArr[counter].id)
-                                {
-                                    hasProjectile = true;
-                                    break;
-                                }
-                            }
-                            if (hasProjectile == false)
-                            {
-                                counter = 0;
-                                projectile.sprite = energyBallSprite;
-                                projectile.id = player.id;
-                                while (counter < player.powerUpLevel)
-                                {
-                                    projectile.collisionRect.setPosition(
-                                        player.collisionRect_x + counter * generateRandom(10),
-                                        player.collisionRect_y + counter * generateRandom(10));
-                                    projectile.direction = player.direction;
-                                    projectileArr.push_back(projectile);
-                                    counter++;
-                                }
-                            }
-                        }*/
                     }
                 }
 
@@ -395,12 +368,15 @@ int main()
         int netProjectileSize = net::projectiles.size();
         int clientProjectileSize = projectileArr.size();
         int diff = netProjectileSize - clientProjectileSize;
-        std::cout << "projectile update: " << netProjectileSize << " ; " << clientProjectileSize << std::endl;
+        std::cout << "[INFO] projectile update: " << netProjectileSize << " : " << clientProjectileSize << std::endl;
         if (clientProjectileSize < netProjectileSize)
         {
             counter2 = netProjectileSize - diff;
             while (counter2 < netProjectileSize)
             { 
+                netProjectileSize = net::projectiles.size();
+                if (counter2 >= netProjectileSize)
+                    break;
                 projectile.id = net::projectiles[counter2].id;
                 projectile.isAlive = net::projectiles[counter2].isAlive;
                 projectile.collisionRect.setPosition(net::projectiles[counter2].collisionRect_x,
@@ -411,22 +387,30 @@ int main()
                 counter2++;
             }
         }
-        else //if (clientProjectileSize == netProjectileSize)
+        else 
         {
 
             for (size_t i = 0; i < net::projectiles.size(); i++)
             {
-                //projectile.id = net::projectiles[i].id; 
-                // DEBUG: 이부분에서 vector 접근 충돌이 자주 일어남 확인 필요
-                if (projectileArr.size() > 0 &&  projectileArr[i].id == net::projectiles[i].id)
+                if (net::projectiles.size() > 0)
                 {
-                    projectileArr[i].isAlive = net::projectiles[i].isAlive;
-                    projectileArr[i].isCollide = net::projectiles[i].isCollide;
-                    projectileArr[i].collisionRect.setPosition(net::projectiles[i].collisionRect_x,
-                        net::projectiles[i].collisionRect_y);
+                    try {
+                        projectileArr.at(i);
+                        if (net::projectiles.size() > projectileArr.size())
+                            break;
+                        if (projectileArr[i].id == net::projectiles[i].id)
+                        {
+                            projectileArr[i].isAlive = net::projectiles[i].isAlive;
+                            projectileArr[i].isCollide = net::projectiles[i].isCollide;
+                            projectileArr[i].collisionRect.setPosition(net::projectiles[i].collisionRect_x,
+                                net::projectiles[i].collisionRect_y);
+                        }
+                    }
+                    catch (int  e)
+                    {
+                        std::cout << "[ERROR] projectile index error" << std::endl;
+                    }
                 }
-                //projectileArr[i]rojectile.direction = net::projectiles[i].direction;
-                //projectileArr.push_back(projectile);
             }
         }
         //
@@ -435,7 +419,7 @@ int main()
         int netEnemySize = net::enemies.size();
         int clientEnemySize = enemyArr.size();
         diff = netEnemySize - clientEnemySize;
-        std::cout << "enemy update: " << netEnemySize << " ; " << clientEnemySize << std::endl;
+        std::cout << "[INFO] enemy update: " << netEnemySize << " : " << clientEnemySize << std::endl;
         if (clientEnemySize < netEnemySize)
         {
             counter2 = netEnemySize - diff;
@@ -450,32 +434,38 @@ int main()
                 enemy.hp = net::enemies[counter2].hp;
                 enemy.maxHp = net::enemies[counter2].maxHp;
                 enemy.isCollide = net::enemies[counter2].isCollide;
+
+                net::enemies[counter2].isBoss ? enemy.sprite.setTextureRect(sf::IntRect(48 * 6, 0, 48, 48))
+                    : enemy.sprite.setTextureRect(sf::IntRect(0, 0, 48, 48));
                 enemyArr.push_back(enemy);
                 counter2++;
             }
         }
         else //if (clientEnemySize == netEnemySize)
         {
+            
             for (size_t i = 0; i < net::enemies.size(); i++)
             {
-                //std::cout << "enem up ---->: " << net::enemies[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                if (net::enemies.size() > enemyArr.size())
+                    break;
                 if (enemyArr[i].id == net::enemies[i].id)
                 {
-                    enemyArr[i].hp= net::enemies[i].hp;
+                    enemyArr[i].hp = net::enemies[i].hp;
                     enemyArr[i].isAlive = net::enemies[i].isAlive;
                     enemyArr[i].isCollide = net::enemies[i].isCollide;
                     enemyArr[i].collisionRect.setPosition(net::enemies[i].collisionRect_x,
                         net::enemies[i].collisionRect_y);
                 }
-                
+
             }
+            
         }
         //
         // update items
         int netItemSize = net::items.size();
         int clientItemSize = itemArr.size();
         diff = netItemSize - clientItemSize;
-        std::cout << "item update: " << netItemSize << " ; " << clientItemSize << std::endl;
+        std::cout << "[INFO] item update: " << netItemSize << " : " << clientItemSize << std::endl;
         if (clientItemSize < netItemSize)
         {
             counter2 = netItemSize - diff;
@@ -515,17 +505,14 @@ int main()
         {
             for (size_t i = 0; i < net::items.size(); i++)
             {
-                //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                if (net::items.size() > itemArr.size())
+                    break;
                 if (itemArr[i].id == net::items[i].id)
                 {
                     itemArr[i].isAlive = net::items[i].isAlive;
                     itemArr[i].isCollide = net::items[i].isCollide;
                     itemArr[i].collisionRect.setPosition(net::items[i].collisionRect_x,
                         net::items[i].collisionRect_y);
-                    //itemArr[i].animateSpriteNumber = net::items[i].animateSpriteNumber;
-                    /*int spriteWidth = item.type == COIN ? 250 : 100;
-                    int spriteHeight = item.type == COIN ? 150 : 100;
-                    itemArr[i].sprite.setTextureRect(sf::IntRect(itemArr[i].animateSpriteNumber* spriteWidth, itemArr[i].collisionRect.getPosition().y, spriteWidth, spriteHeight));*/
                 }
 
             }
@@ -534,7 +521,7 @@ int main()
         int netWallSize = net::walls.size();
         int clientWallSize = wallArr.size();
         diff = netWallSize - clientWallSize;
-        std::cout << "wall update: " << netWallSize << " ; " << clientWallSize << std::endl;
+        std::cout << "[INFO] wall update: " << netWallSize << " : " << clientWallSize << std::endl;
         if (clientWallSize < netWallSize)
         {
             counter2 = netWallSize - diff;
@@ -558,7 +545,8 @@ int main()
         {
             for (size_t i = 0; i < net::walls.size(); i++)
             {
-                //std::cout << "enem up ---->: " << net::items[i].collisionRect_x << " : " << net::enemies[i].collisionRect_y << std::endl;
+                if (net::walls.size() > wallArr.size())
+                    break;
                 if (wallArr[i].id == net::walls[i].id)
                 {
                     wallArr[i].hp = net::walls[i].hp;
@@ -571,7 +559,15 @@ int main()
             }
         }
 
-        //------
+        if (STRESS_TEST == true)
+        {
+            player1.update();
+            player1.direction = generateRandom(5);
+            
+            player1.virtualKeyPressed = player1.direction;
+            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 2);
+        }
+
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event;
         while (window.pollEvent(event))
@@ -587,9 +583,7 @@ int main()
 
         window.clear();
         //
-        sf::Time projectileClockElapsed = projectileClock.getElapsedTime();
-        sf::Time playerCollisionClockElapsed = playerCollisionClock.getElapsedTime();
-        sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
+        
 
 
         // delete not alive enemy
@@ -607,7 +601,6 @@ int main()
             }
             if (found == false)
             {
-                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 enemyArr.erase(enemyIter);
                 break;
             }
@@ -663,7 +656,6 @@ int main()
             }
             if (found == false)
             {
-                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 itemArr.erase(itemIter);
                 break;
             }
@@ -685,7 +677,6 @@ int main()
             }
             if (found == false)
             {
-                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 wallArr.erase(wallIter);
                 break;
             }
@@ -707,7 +698,6 @@ int main()
             }
             if (found == false)
             {
-                //std::cout << ">>>>>>>>>>> deleted" << std::endl;
                 enemies.erase(playerIter);
                 break;
             }
@@ -723,12 +713,12 @@ int main()
             {
                 shotSound.play();
                 projectileClock.restart();
-
+                    
                 client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 2);
             }
         }
 
-         // draw item
+        // draw item
         counter = 0;
         for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
         {
@@ -775,7 +765,7 @@ int main()
             counter++;
         }
 
-       
+
 
         // view player
         window.setView(view);
@@ -788,15 +778,10 @@ int main()
 
         for (size_t i = 0; i < enemies.size(); i++)
         {
-         
-            //std::cout << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
             enemies[i].text.setString("id : " + to_string(enemies[i].id));
             enemies[i].update();
-//            enemies[i].sprite.setPosition(enemies[i].collisionRect_x, enemies[i].collisionRect_y);
             window.draw(enemies[i].text);
             window.draw(enemies[i].sprite);
-            //
-            
         }
         if (update)
         {
@@ -804,23 +789,16 @@ int main()
             if (player1.updated == true)
             {
                 client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 2);
-                /*for (int i = 0; i < net::players.size(); i++)
-                {
-                    if (net::players[i].id == player1.id)
-                    {
-                        net::players[i].direction
-                    }
-                }*/
-                
+
             }
         }
-        
+
 
         scoreText.setString("Money: " + to_string(player1.score));
         window.draw(scoreText);
-        scoreText.setPosition(player1.collisionRect.getPosition().x - window.getSize().x/2, 
-            player1.collisionRect.getPosition().y - window.getSize().y/2);
-        
+        scoreText.setPosition(player1.collisionRect.getPosition().x - window.getSize().x / 2,
+            player1.collisionRect.getPosition().y - window.getSize().y / 2);
+
         powerUpText.setString("Power Level: " + to_string(player1.powerUpLevel));
         window.draw(powerUpText);
         powerUpText.setPosition(player1.collisionRect.getPosition().x - window.getSize().x / 2,
@@ -830,8 +808,8 @@ int main()
         window.draw(hpText);
         hpText.setPosition(player1.collisionRect.getPosition().x - window.getSize().x / 2,
             player1.collisionRect.getPosition().y - window.getSize().y / 2 + 100);
-        
-        
+
+
         // draw ingameText
         counter = 0;
         for (ingameTextIter = ingameTextArr.begin(); ingameTextIter != ingameTextArr.end(); ingameTextIter++)
@@ -842,6 +820,7 @@ int main()
         }
         //
         window.display();
+        
     }
     return 0;
 }

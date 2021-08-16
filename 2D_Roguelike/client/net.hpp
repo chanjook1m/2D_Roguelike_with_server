@@ -37,21 +37,14 @@ namespace net
 	template <typename T1, typename T2>
 	bool detectCollision(T1 a, T2 b)
 	{
-		/*if (abs(a.collisionRect_x - (b.collisionRect_x + b.width)) < 50 &&
-			abs((a.collisionRect_x + a.width) - (b.collisionRect_x)) < 50 &&
-			abs(a.collisionRect_y - (b.collisionRect_y + b.height)) < 30 &&
-			abs((a.collisionRect_y - a.height) - (b.collisionRect_y)) < 30) {*/
 		if (a.collisionRect_x< b.collisionRect_x + 3 * b.width &&
 			a.collisionRect_x + a.width > b.collisionRect_x &&
 			a.collisionRect_y < b.collisionRect_y + 3 * b.height &&
 			a.collisionRect_y + a.height > b.collisionRect_y) {
-			// collision detected!
-			//std::cout << "ooooooooooooooooooooooooo detected " << std::endl;
 			return true;
 		}
 		else
 		{
-			//std::cout << "xxxxxxxxxxxxxx not detected " << std::endl;
 			return false;
 		}
 	}
@@ -172,9 +165,11 @@ namespace net
 			ar& collisionRect_y;
 			ar& isCollide;
 			ar& id;
+			ar& isBoss;
 		}
 
 	public:
+		bool isBoss = false;
 		int id = 0;
 		bool isCollide = false;
 		bool isAlive = false;
@@ -459,7 +454,6 @@ namespace net
 			}
 			else if (direction == 3 && canMoveLeft)
 			{
-				//collisionRect.move(-velocity, 0.f);
 				collisionRect_x = temp_x - velocity;
 				temp_x = collisionRect_x;
 				collisionRect_y = temp_y;
@@ -467,13 +461,10 @@ namespace net
 				canMoveDown = true;
 				canMoveLeft = true;
 				canMoveRight = true;
-				//collisionRect_y = collisionRect.getPosition().y;
-				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
 
 			}
 			else if (direction == 4 && canMoveRight)
 			{
-				//collisionRect.move(velocity, 0.f);
 				collisionRect_x = temp_x + velocity;
 				temp_x = collisionRect_x;
 				collisionRect_y = temp_y;
@@ -481,8 +472,6 @@ namespace net
 				canMoveDown = true;
 				canMoveLeft = true;
 				canMoveRight = true;
-				//collisionRect_y = collisionRect.getPosition().y;
-				//std::cout << collisionRect_x << " and " << collisionRect_y << std::endl;
 
 			}
 			else
@@ -687,7 +676,7 @@ namespace net
 					boost::asio::buffers_begin(bufs) + bufs.size());
 
 				message_ = str;
-				std::cout << message_ << std::endl;
+				//std::cout << message_ << std::endl;
 				socket_.async_send_to(
 					boost::asio::buffer(message_), endpoint_,
 					boost::bind(&sender::handle_send_to, this,
@@ -753,9 +742,6 @@ namespace net
 				//std::stringstream buffer;
 				//buffer << data_ << std::endl;
 				std::string str = convertToString(data_, bytes_recvd);
-				//std::cout << "aa " << str << std::endl;
-				
-
 
 				net::ServerPacket pack;
 
@@ -765,8 +751,6 @@ namespace net
 				enemies = pack.enemies;
 				items = pack.items;
 				walls = pack.walls;
-				std::cout << "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" << std::endl;
-				std::cout << "--->Request2 : " << pack.walls.size() << std::endl;
 
 				socket_.async_receive_from(
 					boost::asio::buffer(data_, max_length), sender_endpoint_,

@@ -171,9 +171,11 @@ namespace net
 			ar& collisionRect_y;
 			ar& isCollide;
 			ar& id;
+			ar& isBoss;
 		}
 
 	public:
+		bool isBoss = false;
 		int id = 0;
 		bool isCollide = false;
 		bool isAlive = false;
@@ -386,7 +388,7 @@ namespace net
 		}
 	public:
 		unsigned short port;
-		int connectDelay = 200;
+		int connectDelay = 170;
 		int connectCounter = 0;
 		bool isConnected = false;
 		bool isCollide = false;
@@ -746,8 +748,6 @@ namespace net
 				//std::stringstream buffer;
 				//buffer << data_ << std::endl;
 				std::string str = convertToString(data_, bytes_recvd);
-				std::cout << "aa " << str << std::endl;
-
 
 				net::ServerPacket pack;
 

@@ -63,7 +63,7 @@ namespace net
 	{
 		if (ec)
 		{
-			std::cout << "Error : " << ec.message() << response << std::endl;
+			std::cout << "[ERROR] " << ec.message() << response << std::endl;
 		}
 		else
 		{
@@ -141,7 +141,7 @@ namespace net
 						return;
 					}
 
-					std::cout << "request : " << session->m_request << std::endl;
+					std::cout << "[REQUEST] " << session->m_request << std::endl;
 					boost::asio::async_write(session->m_sock, boost::asio::buffer(session->m_request),
 						[this, session](const boost::system::error_code& ec, std::size_t bytes_transferred)
 						{
@@ -154,7 +154,7 @@ namespace net
 
 							if (session->m_request == "connect")
 							{
-								std::cout << "connect start " << std::endl;
+								//std::cout << "connect start " << std::endl;
 								
 								// read connect response from server start
 								boost::asio::async_read_until(session->m_sock,
@@ -166,18 +166,17 @@ namespace net
 									{
 										if (ec)
 										{
-											std::cout << "read connect response from server error" << std::endl;
+											std::cout << "[ERROR] read connect response from server failed" << std::endl;
 											session->m_ec = ec;
 										}
 										else
 										{
-											std::cout << "read connect response from server success" << std::endl;
+											std::cout << "[SUCCESS] read connect response from server successful" << std::endl;
 											
 											boost::asio::streambuf::const_buffers_type bufs = session->m_request_buf.data();
 											std::string str(boost::asio::buffers_begin(bufs),
 												boost::asio::buffers_begin(bufs) + bufs.size());
 										
-											//std::cout << " str -> " << str << std::endl;
 											// For atoi, the input string has to start with a digit, so lets search for the first digit
 											size_t i = 0;
 											for (; i < str.length(); i++) { if (str[i]>=48 && str[i] <= 57) break; }
@@ -187,7 +186,7 @@ namespace net
 
 											// convert the remaining text to an integer
 											int netId = atoi(str.c_str());
-											std::cout << " player id : " << netId << std::endl;
+											std::cout << "[INFO] player id : " << netId << std::endl;
 											if (netId)//str == "connected")
 											{
 												connected = true;
@@ -223,19 +222,18 @@ namespace net
 			m_active_sessions[request_id] = session;
 			lock.unlock();
 
-			std::cout << "connect request start" << std::endl;
 			session->m_sock.async_connect(session->m_ep,
 				[&, session](const boost::system::error_code& ec)
 				{
 					if (ec)
 					{
-						std::cout << "connect request error" << std::endl;
+						std::cout << "[ERROR] connect request failed" << std::endl;
 						session->m_ec = ec;
 						onRequestComplete(session);
 						return;
 					}
-					std::cout << "connect request success" << std::endl;
-					std::cout << "read connect reqeust response start" << std::endl;
+					std::cout << "[SUCCESS] connect request successful" << std::endl;
+					//std::cout << "read connect reqeust response start" << std::endl;
 					boost::asio::async_read_until(session->m_sock,
 						session->m_response_buf,
 						//boost::asio::transfer_at_least(packetSize),
@@ -245,12 +243,12 @@ namespace net
 						{
 							if (ec)
 							{
-								std::cout << "read connect reqeust response error" << std::endl;
+								std::cout << "[ERROR] read connect reqeust response failed" << std::endl;
 								session->m_ec = ec;
 							}
 							else
 							{
-								std::cout << "read connect reqeust response success" << std::endl;
+								std::cout << "[SUCCESS] read connect reqeust response successful" << std::endl;
 								boost::asio::streambuf::const_buffers_type bufs = session->m_response_buf.data();
 								std::string str(boost::asio::buffers_begin(bufs),
 									boost::asio::buffers_begin(bufs) + bufs.size());

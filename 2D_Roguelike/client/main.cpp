@@ -14,7 +14,7 @@
 #include "client_interface.hpp"
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
 
-#define STRESS_TEST true
+#define STRESS_TEST false
 
 using namespace std;
 
@@ -264,20 +264,20 @@ int main()
 
     // udp thread - recv game world packet
 
-    boost::asio::io_context udp_io_context;
+    /*boost::asio::io_context udp_io_context;
     std::unique_ptr<std::thread> th(new std::thread([&]()
         {
             net::receiver r(udp_io_context,
                 boost::asio::ip::address::from_string("0.0.0.0"),
                 boost::asio::ip::address::from_string("239.255.0.1"));
             udp_io_context.run();
-        }));
+        }));*/
 
     // main loop - run the program as long as the window is open
     while (window.isOpen())
     {
         //// receive update game packet
-        //client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
+        client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
         client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
 
@@ -369,6 +369,8 @@ int main()
         int clientProjectileSize = projectileArr.size();
         int diff = netProjectileSize - clientProjectileSize;
         std::cout << "[INFO] projectile update: " << netProjectileSize << " : " << clientProjectileSize << std::endl;
+
+
         if (clientProjectileSize < netProjectileSize)
         {
             counter2 = netProjectileSize - diff;
@@ -381,6 +383,7 @@ int main()
                 projectile.isAlive = net::projectiles[counter2].isAlive;
                 projectile.collisionRect.setPosition(net::projectiles[counter2].collisionRect_x,
                     net::projectiles[counter2].collisionRect_y);
+                projectile.collisionRect.setSize(sf::Vector2f(net::projectiles[counter2].width, net::projectiles[counter2].height));
                 projectile.direction = net::projectiles[counter2].direction;
                 projectile.isCollide = net::projectiles[counter2].isCollide;
                 projectileArr.push_back(projectile);
@@ -406,13 +409,15 @@ int main()
                                 net::projectiles[i].collisionRect_y);
                         }
                     }
-                    catch (int  e)
+                    catch (int e)
                     {
                         std::cout << "[ERROR] projectile index error" << std::endl;
                     }
                 }
             }
         }
+
+
         //
 
         // update enemies
@@ -583,6 +588,9 @@ int main()
 
         window.clear();
         //
+        sf::Time projectileClockElapsed = projectileClock.getElapsedTime();
+        sf::Time playerCollisionClockElapsed = playerCollisionClock.getElapsedTime();
+        sf::Time aggroClockElapsed = aggroClock.getElapsedTime();
         
 
 
@@ -713,7 +721,7 @@ int main()
             {
                 shotSound.play();
                 projectileClock.restart();
-                    
+                //std::cout << "shooooooooooooooooooooooooooooooooooooooooooooooo" <<std::endl;
                 client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 2);
             }
         }
@@ -739,6 +747,7 @@ int main()
             // draw eneryball
             gif.update(projectileArr[counter].sprite);
             window.draw(projectileArr[counter].sprite);
+            //window.draw(projectileArr[counter].collisionRect);
             counter++;
         }
 
@@ -761,6 +770,7 @@ int main()
             {
                 wallArr[counter].update();
                 window.draw(wallArr[counter].sprite);
+                //window.draw(wallArr[counter].collisionRect);
             }
             counter++;
         }

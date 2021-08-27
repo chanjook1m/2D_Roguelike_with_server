@@ -12,9 +12,16 @@
 #include <stdlib.h>
 #include <boost/bind.hpp>
 
+#include <cereal/cereal.hpp>
+//#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/binary.hpp>
+
 namespace net
 {
-	
+
 	bool generateRandomBool()
 	{
 		int randomNumber = rand();
@@ -51,11 +58,13 @@ namespace net
 
 	class Wall
 	{
-		friend class boost::serialization::access;
+		//friend class boost::serialization::access;
+		friend class cereal::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar& collisionRect_x;
+			ar(collisionRect_x, collisionRect_y, destructible, hp, width, height, isAlive, isCollide, id);
+			/*ar& collisionRect_x;
 			ar& collisionRect_y;
 			ar& destructible;
 			ar& hp;
@@ -63,8 +72,9 @@ namespace net
 			ar& height;
 			ar& isAlive;
 			ar& isCollide;
-			ar& id;
+			ar& id;*/
 		}
+
 
 	public:
 		int id = 0;
@@ -80,11 +90,14 @@ namespace net
 
 	class Item
 	{
-		friend class boost::serialization::access;
+		//friend class boost::serialization::access;
+		friend class cereal::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar& animateSpriteNumber;
+			ar(animateSpriteNumber, delayCounter, animateDelay, type, scaleValue, inShop, cost,
+				collisionRect_x, collisionRect_y, isAlive, isCollide, id);
+			/*ar& animateSpriteNumber;
 			ar& delayCounter;
 			ar& animateDelay;
 			ar& type;
@@ -95,7 +108,7 @@ namespace net
 			ar& collisionRect_y;
 			ar& isAlive;
 			ar& isCollide;
-			ar& id;
+			ar& id;*/
 		}
 
 		enum types
@@ -140,11 +153,15 @@ namespace net
 
 	class Enemy
 	{
-		friend class boost::serialization::access;
+		//friend class boost::serialization::access;
+		friend class cereal::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar& isAlive;
+			ar(isAlive, velocity, attackDamage, walkSpriteNumber, direction, delayCounter,
+				movementDelay, hp, maxHp, canMoveUp, canMoveDown, canMoveLeft, canMoveRight,
+				aggroedBy, collisionRect_x, collisionRect_y, isCollide, id, isBoss);
+			/*ar& isAlive;
 			ar& velocity;
 			ar& attackDamage;
 			ar& walkSpriteNumber;
@@ -165,7 +182,7 @@ namespace net
 			ar& collisionRect_y;
 			ar& isCollide;
 			ar& id;
-			ar& isBoss;
+			ar& isBoss;*/
 		}
 
 	public:
@@ -283,11 +300,14 @@ namespace net
 
 	class Projectile
 	{
-		friend class boost::serialization::access;
+		//friend class boost::serialization::access;
+		friend class cereal::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar& id;
+			ar(id, velocity, attackDamage, direction, lifetime, lifetimeCounter,
+				collisionRect_x, collisionRect_y, isAlive, isCollide);
+			/*ar& id;
 			ar& velocity;
 			ar& attackDamage;
 			ar& direction;
@@ -296,7 +316,7 @@ namespace net
 			ar& collisionRect_x;
 			ar& collisionRect_y;
 			ar& isAlive;
-			ar& isCollide;
+			ar& isCollide;*/
 		}
 	public:
 		bool isCollide = false;
@@ -360,11 +380,15 @@ namespace net
 
 	class Player
 	{
-		friend class boost::serialization::access;
+		//friend class boost::serialization::access;
+		friend class cereal::access;
 		template<class Archive>
 		void serialize(Archive& ar, const unsigned int version)
 		{
-			ar& id;
+			ar(id, collisionRect_x, collisionRect_y, velocity, powerUpLevel,
+				direction, hp, maxHp, score, canMoveUp, canMoveDown, canMoveLeft, canMoveRight,
+				isAlive, isCollide);
+			/*ar& id;
 			ar& collisionRect_x;
 			ar& collisionRect_y;
 			ar& velocity;
@@ -378,7 +402,7 @@ namespace net
 			ar& canMoveLeft;
 			ar& canMoveRight;
 			ar& isAlive;
-			ar& isCollide;
+			ar& isCollide;*/
 		}
 	public:
 		unsigned short port;
@@ -490,69 +514,82 @@ namespace net
 
 	// ------------------------------
 
-	class LoginPacket
+	struct LoginPacket
 	{
-	public:
-		int type;
-		int id;
 
-	private:
+		int type = 0;
+		int id = 0;
 
-		friend class boost::serialization::access;
+
+
+		//friend class boost::serialization::access;
 		template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
+		void serialize(Archive& ar, std::uint32_t const version)
 		{
-			ar& type;
-			ar& id;
+			ar(type, id);
+			//ar& type;
+			//ar& id;
 
 		}
 
-	public:
 
 
 
 		void save(std::ostream& oss)
 		{
-			boost::archive::binary_oarchive oa(oss);
-			oa&* (this);
+			//boost::archive::binary_oarchive oa(oss);
+
+			//oa&* (this);
+			cereal::PortableBinaryOutputArchive oa(oss);
+			oa(*this);
+
 		}
 		void load(std::string str_data)
 		{
 			std::istringstream iss(str_data);
-			boost::archive::binary_iarchive ia(iss);
-			ia&* (this);
+			cereal::PortableBinaryInputArchive ia(iss);
+			ia(*this);
+			//boost::archive::binary_iarchive ia(iss);
+			//ia&* (this);
 		}
 	};
 
-	class ServerPacket
+
+
+	struct ServerPacket
 	{
-	public:
-		int type;
+		int type = 0;
+		int id = 0;
+		std::string msg;
 		std::vector<Player> players;
 		std::vector<Projectile> projectiles;
 		std::vector<Enemy> enemies;
 		std::vector<Item> items;
 		std::vector<Wall> walls;
-		std::string msg;
-		int id;
 
-	private:
 
-		friend class boost::serialization::access;
+
+		//friend class boost::serialization::access;
+		//friend class cereal::access;
 		template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
+		void serialize(Archive& ar, std::uint32_t const version)
 		{
-			ar& type;
-			ar& id;
-			ar& msg;
-			ar& players;
-			ar& projectiles;
-			ar& enemies;
-			ar& walls;
-			ar& items;
+			ar(type, id, msg, players, projectiles, enemies, walls, items);
+			//	ar& type;
+			//	ar& id;
+			//	ar& msg;
+			//	ar& players;
+			//	ar& projectiles;
+			//	ar& enemies;
+			//	ar& walls;
+			//	ar& items;
 		}
 
-	public:
+
+
+
+
+
 		ServerPacket()
 		{
 
@@ -563,36 +600,45 @@ namespace net
 
 		}
 
+
+
 		void save(std::ostream& oss)
 		{
-			boost::archive::binary_oarchive oa(oss);
-			oa&* (this);
+			//boost::archive::binary_oarchive oa(oss);
+
+			//oa&* (this);
+			cereal::PortableBinaryOutputArchive oa(oss);
+			oa(*this);
+
 		}
 		void load(std::string str_data)
 		{
 			std::istringstream iss(str_data);
-			boost::archive::binary_iarchive ia(iss);
-			ia&* (this);
+			cereal::PortableBinaryInputArchive ia(iss);
+			ia(*this);
+			//boost::archive::binary_iarchive ia(iss);
+			//ia&* (this);
 		}
 	};
 
-	class ClientPacket
+	struct ClientPacket
 	{
-	public:
+
 		int key; // 1 = up, ... , 5 = space
 		int player_id;
 
-	private:
 
-		friend class boost::serialization::access;
+
+		//friend class boost::serialization::access;
 		template<class Archive>
-		void serialize(Archive& ar, const unsigned int version)
+		void serialize(Archive& ar, std::uint32_t const version)
 		{
-			ar& key;
-			ar& player_id;
+			ar(key, player_id);
+			//ar& key;
+			//ar& player_id;
 		}
 
-	public:
+
 		ClientPacket()
 		{
 
@@ -604,14 +650,20 @@ namespace net
 
 		void save(std::ostream& oss)
 		{
-			boost::archive::binary_oarchive oa(oss);
-			oa&* (this);
+			//boost::archive::binary_oarchive oa(oss);
+
+			//oa&* (this);
+			cereal::PortableBinaryOutputArchive oa(oss);
+			oa(*this);
+
 		}
 		void load(std::string str_data)
 		{
 			std::istringstream iss(str_data);
-			boost::archive::binary_iarchive ia(iss);
-			ia&* (this);
+			cereal::PortableBinaryInputArchive ia(iss);
+			ia(*this);
+			//boost::archive::binary_iarchive ia(iss);
+			//ia&* (this);
 		}
 	};
 
@@ -670,7 +722,7 @@ namespace net
 
 				std::ostream oss(&buf);
 
-				pack.save(oss);
+				//pack.save(oss);
 				boost::asio::streambuf::const_buffers_type bufs = buf.data();
 				std::string str(boost::asio::buffers_begin(bufs),
 					boost::asio::buffers_begin(bufs) + bufs.size());
@@ -745,7 +797,7 @@ namespace net
 
 				net::ServerPacket pack;
 
-				pack.load(str);
+				//pack.load(str);
 				players = pack.players;
 				projectiles = pack.projectiles;
 				enemies = pack.enemies;

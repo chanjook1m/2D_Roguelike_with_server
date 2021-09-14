@@ -22,7 +22,7 @@
 namespace net
 {
 
-	bool generateRandomBool()
+	static bool generateRandomBool()
 	{
 		int randomNumber = rand();
 		int random = (randomNumber % 2) + 1;
@@ -33,7 +33,7 @@ namespace net
 			return false;
 	}
 
-	int generateRandom(int max)
+	static int generateRandom(int max)
 	{
 		int randomNumber = rand();
 		int random = (randomNumber % max) + 1;
@@ -744,11 +744,11 @@ namespace net
 		std::string message_;
 	};
 
-	std::vector<Player> players;
-	std::vector<Projectile> projectiles;
-	std::vector<Enemy> enemies;
-	std::vector<Item> items;
-	std::vector<Wall> walls;
+	static std::vector<Player> players;
+	static std::vector<Projectile> projectiles;
+	static std::vector<Enemy> enemies;
+	static std::vector<Item> items;
+	static std::vector<Wall> walls;
 
 	class receiver
 	{

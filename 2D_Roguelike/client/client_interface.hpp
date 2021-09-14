@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __CLIENT_INTERFACE_H
+#define __CLIENT_INTERFACE_H
 
 #include <boost/asio.hpp>
 #include <boost/core/noncopyable.hpp>
@@ -16,10 +18,10 @@ typedef void (*Callback) (unsigned int request_id,
 
 namespace net
 {
-    bool connected = false;
+    static bool connected = false;
 
 
-    int id;
+    static int id;
     //int packetSize = 700;
 
     struct Session
@@ -59,7 +61,7 @@ namespace net
         std::mutex m_cancel_guard;
     };
 
-    void handler(unsigned int request_id,
+    static void handler(unsigned int request_id,
         const std::string& response,
         const boost::system::error_code& ec)
     {
@@ -293,7 +295,7 @@ namespace net
                                 id = pack.id;
 
 
-                                //std::cout << "--->Request2 : " << enemies.size() << std::endl;
+                                //std::cout << "--->Request2222 : " << enemies.size() << std::endl;
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
 
                             }
@@ -364,3 +366,4 @@ namespace net
         std::unique_ptr<std::thread> m_thread;
     };
 }
+#endif

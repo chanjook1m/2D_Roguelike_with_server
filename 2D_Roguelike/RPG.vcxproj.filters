@@ -45,6 +45,18 @@
     <ClCompile Include="client\wall.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="client\Game.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="client\StateManager.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="client\GamePlay.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="client\MainMenu.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\sniper.jpg">
@@ -89,6 +101,21 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="client\net.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\MainMenu.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\Game.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\StateManager.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\State.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="client\GamePlay.hpp">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

@@ -158,12 +158,16 @@
     <ClCompile Include="client\animatedGIF.cpp" />
     <ClCompile Include="client\enemy.cpp" />
     <ClCompile Include="client\entity.cpp" />
+    <ClCompile Include="client\Game.cpp" />
+    <ClCompile Include="client\GamePlay.cpp" />
     <ClCompile Include="client\ingameText.cpp" />
     <ClCompile Include="client\item.cpp" />
     <ClCompile Include="client\main.cpp" />
+    <ClCompile Include="client\MainMenu.cpp" />
     <ClCompile Include="client\player.cpp" />
     <ClCompile Include="client\projectile.cpp" />
     <ClCompile Include="client\random.cpp" />
+    <ClCompile Include="client\StateManager.cpp" />
     <ClCompile Include="client\wall.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,12 +179,17 @@
     <ClInclude Include="client\client_interface.hpp" />
     <ClInclude Include="client\enemy.h" />
     <ClInclude Include="client\entity.h" />
+    <ClInclude Include="client\Game.hpp" />
+    <ClInclude Include="client\GamePlay.hpp" />
     <ClInclude Include="client\ingameText.h" />
     <ClInclude Include="client\item.h" />
+    <ClInclude Include="client\MainMenu.hpp" />
     <ClInclude Include="client\net.hpp" />
     <ClInclude Include="client\player.h" />
     <ClInclude Include="client\projectile.h" />
     <ClInclude Include="client\random.h" />
+    <ClInclude Include="client\State.hpp" />
+    <ClInclude Include="client\StateManager.hpp" />
     <ClInclude Include="client\stb_image.h" />
     <ClInclude Include="client\wall.h" />
   </ItemGroup>

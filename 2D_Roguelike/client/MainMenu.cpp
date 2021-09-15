@@ -2,9 +2,16 @@
 
 #include "GamePlay.hpp"
 
+#include "Chatbox.h"
+#include "Inputbox.h"
+
 #include <SFML/Window/Event.hpp>
 #define RESOURCE_DIR (std::string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
 sf::Font font;
+
+ChatBox chatBox(sf::Vector2f(50, 100), 300, 5, 20, 15, font);
+InputBox inputBox1(sf::Vector2f(500, 500), 120, 50, 20, 15, font);
+InputBox inputBox2(sf::Vector2f(500, 600), 120, 50, 20, 15, font);
 
 MainMenu::MainMenu(std::shared_ptr<Context>& context)
 	: m_context(context), m_isPlayButtonSelected(true),
@@ -21,6 +28,7 @@ MainMenu::~MainMenu()
 
 void MainMenu::Init()
 {
+
 	// add font
 	
     if (!font.loadFromFile(RESOURCE_DIR + "godoMaum.ttf"))
@@ -105,10 +113,17 @@ void MainMenu::ProcessInput()
             }
             default:
             {
+                
+
                 break;
             }
             }
         }
+
+        /*chatBox.handleEvent(event);
+        std::string toBePushed;*/
+        inputBox1.handleEvent(event, *m_context->m_window);
+        inputBox2.handleEvent(event, *m_context->m_window);
     }
 }
 
@@ -134,13 +149,32 @@ void MainMenu::Update(sf::Time deltaTime)
         m_context->m_window->close();
     }
 
+    /*if (isSelected)
+        text.setPosition(520, 520);
+    else if (isSelected2)
+        text.setPosition(520, 720);*/
 }
 
 void MainMenu::Draw()
 {
+    
+    chatBox.setFillColor(sf::Color::Cyan);
+    chatBox.setOutlineColor(sf::Color::Black);
+    chatBox.setCharColor(sf::Color::Black);
+
     m_context->m_window->clear(sf::Color::Blue);
+    chatBox.update();
+    chatBox.draw(*(m_context->m_window));
+
+    inputBox1.update();
+    inputBox1.draw(*(m_context->m_window));
+
+    inputBox2.update();
+    inputBox2.draw(*(m_context->m_window));
+
     m_context->m_window->draw(m_gameTitle);
     m_context->m_window->draw(m_playButton);
     m_context->m_window->draw(m_exitButton);
+
     m_context->m_window->display();
 }

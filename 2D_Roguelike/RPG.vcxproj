@@ -156,11 +156,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="client\animatedGIF.cpp" />
+    <ClCompile Include="client\Chatbox.cpp" />
     <ClCompile Include="client\enemy.cpp" />
     <ClCompile Include="client\entity.cpp" />
     <ClCompile Include="client\Game.cpp" />
     <ClCompile Include="client\GamePlay.cpp" />
     <ClCompile Include="client\ingameText.cpp" />
+    <ClCompile Include="client\Inputbox.cpp" />
     <ClCompile Include="client\item.cpp" />
     <ClCompile Include="client\main.cpp" />
     <ClCompile Include="client\MainMenu.cpp" />
@@ -176,12 +178,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animatedGIF.h" />
+    <ClInclude Include="client\Chatbox.h" />
     <ClInclude Include="client\client_interface.hpp" />
     <ClInclude Include="client\enemy.h" />
     <ClInclude Include="client\entity.h" />
     <ClInclude Include="client\Game.hpp" />
     <ClInclude Include="client\GamePlay.hpp" />
     <ClInclude Include="client\ingameText.h" />
+    <ClInclude Include="client\Inputbox.h" />
     <ClInclude Include="client\item.h" />
     <ClInclude Include="client\MainMenu.hpp" />
     <ClInclude Include="client\net.hpp" />

@@ -64,7 +64,7 @@ sf::Clock projectileClock;
 sf::Clock playerCollisionClock;
 sf::Clock aggroClock;
 
-net::AsyncTCPClient client;
+static net::AsyncTCPClient client;
 
 GamePlay::GamePlay(std::shared_ptr<Context>& context)
     : m_context(context)
@@ -104,9 +104,9 @@ void GamePlay::Init()
 
     
 
-    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 0);
+    //client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 0);
 
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
     std::cout << "[INFO] connection status: " << (net::connected ? "connected" : "not connected") << std::endl;
     if (net::connected)
     {
@@ -293,7 +293,7 @@ void GamePlay::Update(sf::Time deltaTime)
 {
     client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
 
-    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 1);
+    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 1);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(33));
 
@@ -584,7 +584,7 @@ void GamePlay::Update(sf::Time deltaTime)
         player1.direction = generateRandom(5);
 
         player1.virtualKeyPressed = player1.direction;
-        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 2);
+        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
     }
 
     //
@@ -722,7 +722,7 @@ void GamePlay::Update(sf::Time deltaTime)
             //shotSound.play();
             projectileClock.restart();
             //std::cout << "shooooooooooooooooooooooooooooooooooooooooooooooo" <<std::endl;
-            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, 2);
+            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
         }
     }
 
@@ -801,7 +801,7 @@ void GamePlay::Draw()
         player1.update();
         if (player1.updated == true)
         {
-            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, 2);
+            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
             std::cout << "0000000000 updated " << std::endl;
 
         }

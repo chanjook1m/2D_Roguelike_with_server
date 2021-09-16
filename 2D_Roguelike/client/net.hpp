@@ -744,11 +744,11 @@ namespace net
 		std::string message_;
 	};
 
-	static std::vector<Player> players;
-	static std::vector<Projectile> projectiles;
-	static std::vector<Enemy> enemies;
-	static std::vector<Item> items;
-	static std::vector<Wall> walls;
+	inline std::vector<Player> players;
+	inline std::vector<Projectile> projectiles;
+	inline std::vector<Enemy> enemies;
+	inline std::vector<Item> items;
+	inline std::vector<Wall> walls;
 
 	class receiver
 	{

@@ -2,8 +2,8 @@
 #include <iostream>
 
 InputBox::InputBox(const sf::Vector2f pos, const float width_, const float height_, const int charSize_,
-	const std::size_t historyLength_, const sf::Font& font) : 
-	charSize(charSize_), historyLength(historyLength_)
+	const std::size_t historyLength_, const sf::Font& font, int type_) : 
+	charSize(charSize_), historyLength(historyLength_), type(type_)
 {
 	box.setPosition(pos);
 	box.setSize(sf::Vector2f(width_, height_));
@@ -12,7 +12,7 @@ InputBox::InputBox(const sf::Vector2f pos, const float width_, const float heigh
 	text.setFont(font);
 	text.setCharacterSize(charSize);
 	text.setFillColor(sf::Color::Black);
-	text.setPosition(pos.x + 20, pos.y + 20);
+	text.setPosition(pos.x + 30, pos.y);
 
 	historyText.setFont(font);
 	historyText.setCharacterSize(charSize);
@@ -25,7 +25,17 @@ InputBox::~InputBox(void)
 void InputBox::update()
 {
 	//text.setString(buffer);
-	text.setString(s);
+	if (type == 0)
+		text.setString(s);
+	else if (type == 1)
+	{
+		sf::String new_s;
+		for (int i = 0; i < s.getSize(); i++)
+		{
+			new_s += "*";
+		}
+		text.setString(new_s);
+	}
 }
 
 void InputBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
@@ -41,7 +51,10 @@ void InputBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
 		}
 
 		else if (code != '\b')
+		{
+
 			s += event.text.unicode;//buffer.push_back(code);
+		}
 		else if (code == '\b')
 		{
 			/*if (buffer.size() > 0)

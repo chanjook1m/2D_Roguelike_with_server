@@ -4,14 +4,27 @@
 
 #include "Chatbox.h"
 #include "Inputbox.h"
+#include "client_interface.hpp"
+
+#include "sha256.h"
 
 #include <SFML/Window/Event.hpp>
 #define RESOURCE_DIR (std::string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
+
+static net::AsyncTCPClient client;
+int player_id = 0;
+
 sf::Font font;
 
 ChatBox chatBox(sf::Vector2f(50, 100), 300, 5, 20, 15, font);
-InputBox inputBox1(sf::Vector2f(500, 500), 120, 50, 20, 15, font);
-InputBox inputBox2(sf::Vector2f(500, 600), 120, 50, 20, 15, font);
+InputBox inputBox1(sf::Vector2f(500, 500), 120, 50, 40, 15, font, 0);
+InputBox inputBox2(sf::Vector2f(500, 600), 120, 50, 40, 15, font, 1);
+
+sf::RectangleShape button(sf::Vector2f(120, 50));
+bool isSelected = false;
+sf::String s;
+sf::Text text;
+sf::Text loginResultMessage;
 
 MainMenu::MainMenu(std::shared_ptr<Context>& context)
 	: m_context(context), m_isPlayButtonSelected(true),
@@ -28,6 +41,8 @@ MainMenu::~MainMenu()
 
 void MainMenu::Init()
 {
+    
+    button.setPosition(500, 700);
 
 	// add font
 	
@@ -35,6 +50,16 @@ void MainMenu::Init()
     {
         std::cout << "Error" << std::endl;
     }
+
+    text.setFont(font);
+    text.setString(L"로그인");
+    text.setPosition(button.getPosition().x + 40, button.getPosition().y);
+    text.setFillColor(sf::Color::Black);
+
+    loginResultMessage.setFont(font);
+    loginResultMessage.setFillColor(sf::Color::Black);
+    loginResultMessage.setPosition(button.getPosition().x, button.getPosition().y + 50);
+    
 	
     // Title
     m_gameTitle.setFont(font);
@@ -119,7 +144,52 @@ void MainMenu::ProcessInput()
             }
             }
         }
+        else if (event.type == sf::Event::MouseButtonReleased)
+        {
+            if (event.key.code == sf::Mouse::Left)
+            {
+                if (sf::Mouse::getPosition(*(m_context->m_window)).x >= button.getPosition().x
+                    && sf::Mouse::getPosition(*(m_context->m_window)).x <= button.getPosition().x + button.getSize().x
+                    && sf::Mouse::getPosition(*(m_context->m_window)).y >= button.getPosition().y
+                    && sf::Mouse::getPosition(*(m_context->m_window)).y <= button.getPosition().y + button.getSize().y)
+                    // The box has been selected
+                    // Toggle the boolean
+                {
+                    isSelected = !isSelected;
 
+                    std::string newStr1 = inputBox1.s.toAnsiString();
+                    std::string newStr2 = inputBox2.s.toAnsiString();
+                    std::string newStr = newStr1 + ";" + sha256(newStr2);
+
+                    //std::cout << newStr << std::endl; 
+
+                    client.WriteOperation(0, "127.0.0.1", 5556, net::handler, player_id, newStr, 2);
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    std::cout << net::id << std::endl;
+                    
+                    
+                    loginResultMessage.setString(net::connected ? L"로그인 성공" : L"로그인 실패");
+                }
+            }
+        }
+        //else if (event.type == sf::Event::TextEntered)
+        //{
+        //    char code = static_cast<char>(event.text.unicode);
+
+        //    if (code != '\b')
+        //        s += event.text.unicode;//buffer.push_back(code);
+        //    else if (code == '\b')
+        //    {
+        //        /*if (buffer.size() > 0)
+        //            buffer.pop_back();*/
+        //        if (s.getSize() > 0) {
+        //            //std::cout << "문자열길이 : " << s.getSize() << std::endl;
+        //            s.erase(s.getSize() - 1); //마지막글자를 지운다.
+        //        }
+        //    }
+        //}
+
+        //std::cout << isSelected << std::endl;
         /*chatBox.handleEvent(event);
         std::string toBePushed;*/
         inputBox1.handleEvent(event, *m_context->m_window);
@@ -139,20 +209,20 @@ void MainMenu::Update(sf::Time deltaTime)
         m_exitButton.setFillColor(sf::Color::Black);
         m_playButton.setFillColor(sf::Color::White);
     }
-
-    if (m_isPlayButtonPressed)
+    
+    if (net::connected)
     {
+        //std::cout << "connected" << std::endl;
         m_context->m_states->Add(std::make_unique<GamePlay>(m_context), true);
     }
-    else if (m_isExitButtonPressed)
+    else
+    {
+        //std::cout << "not connected" << std::endl;
+    }
+    /*else if (m_isExitButtonPressed)
     {
         m_context->m_window->close();
-    }
-
-    /*if (isSelected)
-        text.setPosition(520, 520);
-    else if (isSelected2)
-        text.setPosition(520, 720);*/
+    }*/
 }
 
 void MainMenu::Draw()
@@ -172,9 +242,16 @@ void MainMenu::Draw()
     inputBox2.update();
     inputBox2.draw(*(m_context->m_window));
 
+   
+
     m_context->m_window->draw(m_gameTitle);
     m_context->m_window->draw(m_playButton);
     m_context->m_window->draw(m_exitButton);
 
+    m_context->m_window->draw(button);
+    m_context->m_window->draw(text);
+    m_context->m_window->draw(loginResultMessage);
+    
+    
     m_context->m_window->display();
 }

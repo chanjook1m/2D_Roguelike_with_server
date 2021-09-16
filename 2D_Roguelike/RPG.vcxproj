@@ -126,6 +126,7 @@
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -144,6 +145,7 @@
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -169,6 +171,7 @@
     <ClCompile Include="client\player.cpp" />
     <ClCompile Include="client\projectile.cpp" />
     <ClCompile Include="client\random.cpp" />
+    <ClCompile Include="client\sha256.cpp" />
     <ClCompile Include="client\StateManager.cpp" />
     <ClCompile Include="client\wall.cpp" />
   </ItemGroup>
@@ -192,6 +195,7 @@
     <ClInclude Include="client\player.h" />
     <ClInclude Include="client\projectile.h" />
     <ClInclude Include="client\random.h" />
+    <ClInclude Include="client\sha256.h" />
     <ClInclude Include="client\State.hpp" />
     <ClInclude Include="client\StateManager.hpp" />
     <ClInclude Include="client\stb_image.h" />

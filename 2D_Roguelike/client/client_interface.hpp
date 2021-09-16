@@ -18,10 +18,12 @@ typedef void (*Callback) (unsigned int request_id,
 
 namespace net
 {
-    static bool connected = false;
+    inline bool connected = false;
 
 
-    static int id;
+    inline int id = 0;
+
+    inline int session_id = 0;
     //int packetSize = 700;
 
     struct Session
@@ -97,6 +99,7 @@ namespace net
             unsigned short port_num,
             Callback callback,
             int& player_id,
+            std::string request_,
             unsigned int request_id)
         {
             //std::string request = "Operation " + std::to_string(key) + "\n";
@@ -111,6 +114,12 @@ namespace net
             else if (request_id == 1)
             {
                 std::string request = "id_" + std::to_string(player_id);
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));
+            }
+            else if (request_id == 2)
+            {
+                std::string request = request_; 
                 session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
                     request, request_id, callback));
             }
@@ -133,11 +142,11 @@ namespace net
             session->m_sock.open(session->m_ep.protocol());
 
             std::unique_lock<std::mutex> lock(m_active_sessions_guard);
-            m_active_sessions[request_id] = session;
+            m_active_sessions[session_id++] = session;
             lock.unlock();
 
             session->m_sock.async_connect(session->m_ep,
-                [&, session](const boost::system::error_code& ec)
+                [&, session, request_id](const boost::system::error_code& ec)
                 {
                     if (ec)
                     {
@@ -151,7 +160,7 @@ namespace net
                     std::cout << "[REQUEST] " << session->m_request << std::endl;
                     //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "REQUEST: %s", session->m_request.c_str());
                     boost::asio::async_write(session->m_sock, boost::asio::buffer(session->m_request),
-                        [this, session](const boost::system::error_code& ec, std::size_t bytes_transferred)
+                        [this, session, request_id](const boost::system::error_code& ec, std::size_t bytes_transferred)
                         {
                             if (ec)
                             {
@@ -161,7 +170,7 @@ namespace net
                                 return;
                             }
 
-                            if (session->m_request == "connect")
+                            if (request_id == 0 || request_id == 2)//session->m_request == "connect")
                             {
 
                                 std::cout << "connect start " << std::endl;
@@ -209,12 +218,11 @@ namespace net
                 */
                                         int netId = pack.id;
 
-                                        //std::cout << "[INFO] player id : " << netId << std::endl;
+                                        std::cout << "[INFO] player id : " << netId << std::endl;
                                         if (netId > 0)//str == "connected")
                                         {
                                             connected = true;
                                             id = netId;
-
                                         }
 
                                     }
@@ -222,6 +230,7 @@ namespace net
                                     onRequestComplete(session);
                                 }
                             }
+                            
 
 
                         });

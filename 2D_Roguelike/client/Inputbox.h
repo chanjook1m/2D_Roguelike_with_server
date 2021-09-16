@@ -19,6 +19,7 @@ private:
 	sf::RectangleShape box;  //histories go here
 
 	bool isSelected = false;
+	int type = 0;
 
 	sf::Text text;
 	sf::Text historyText;
@@ -26,13 +27,15 @@ private:
 
 	std::string buffer;
 
-	sf::String s;
+	
 
 	std::function<void(const std::string& s)> onEnter;
 public:
-	InputBox(const sf::Vector2f pos, const float width, const float height, const int charSize, const std::size_t historyLength, const sf::Font& font);
+	InputBox(const sf::Vector2f pos, const float width, const float height, const int charSize, const std::size_t historyLength, const sf::Font& font, int type);
 	~InputBox();
 
+	sf::String s;
+		
 	void setOutlineColor(const sf::Color& color);
 	void setFillColor(const sf::Color& color);
 	void setCharColor(const sf::Color& color);

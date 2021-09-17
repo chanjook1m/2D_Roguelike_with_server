@@ -14,14 +14,13 @@ class ChatBox
 {
 private:
 	const std::size_t historyLength;
-	const float thickness;
+	
 	const int charSize;
 	const float length;
 
-	sf::RectangleShape box1;  //histories go here
-	sf::RectangleShape box2;  //buffer goes here
+	
 
-	sf::Text text;
+	
 	sf::Text historyText;
 	std::deque<std::string> history;
 
@@ -34,6 +33,14 @@ public:
 	ChatBox(const sf::Vector2f pos, const float length, const float thickness, const int charSize, const std::size_t historyLength, const sf::Font& font);
 	~ChatBox();
 
+	sf::RectangleShape box1;  //histories go here
+	sf::RectangleShape box2;  //buffer goes here
+
+	sf::RectangleShape box3;
+	const float thickness;
+	sf::Text text;
+	sf::Text buttonText;
+
 	void setOutlineColor(const sf::Color& color);
 	void setFillColor(const sf::Color& color);
 	void setCharColor(const sf::Color& color);
@@ -41,7 +48,7 @@ public:
 
 
 	void update();
-	void handleEvent(sf::Event& event);
+	void handleEvent(sf::Event& event, sf::RenderWindow& window);
 
 	void push(const std::string& s);
 	void connectOnEnter(std::function<void(const std::string& s)> func);

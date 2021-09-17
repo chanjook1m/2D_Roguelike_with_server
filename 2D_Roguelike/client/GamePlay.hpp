@@ -20,6 +20,8 @@
 #include "wall.h"
 #include "animatedGIF.h"
 #include "client_interface.hpp"
+
+#include "Chatbox.h"
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
 
 #define STRESS_TEST false

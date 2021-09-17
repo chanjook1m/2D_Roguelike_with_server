@@ -2,7 +2,6 @@
 
 #include "GamePlay.hpp"
 
-#include "Chatbox.h"
 #include "Inputbox.h"
 #include "client_interface.hpp"
 
@@ -16,7 +15,7 @@ int player_id = 0;
 
 sf::Font font;
 
-ChatBox chatBox(sf::Vector2f(50, 100), 300, 5, 20, 15, font);
+//static ChatBox chatBox(sf::Vector2f(50, 100), 300, 5, 20, 15, font);
 InputBox inputBox1(sf::Vector2f(500, 500), 120, 50, 40, 15, font, 0);
 InputBox inputBox2(sf::Vector2f(500, 600), 120, 50, 40, 15, font, 1);
 
@@ -161,11 +160,18 @@ void MainMenu::ProcessInput()
                     std::string newStr2 = inputBox2.s.toAnsiString();
                     std::string newStr = newStr1 + ";" + sha256(newStr2);
 
-                    //std::cout << newStr << std::endl; 
+                    std::cout << newStr << std::endl; 
 
                     client.WriteOperation(0, "127.0.0.1", 5556, net::handler, player_id, newStr, 2);
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                     std::cout << net::id << std::endl;
+
+                    if (net::connected)
+                    {
+                        client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player_id, "", 0);
+                        std::this_thread::sleep_for(std::chrono::seconds(3));
+                    }
+
                     
                     
                     loginResultMessage.setString(net::connected ? L"로그인 성공" : L"로그인 실패");
@@ -228,13 +234,13 @@ void MainMenu::Update(sf::Time deltaTime)
 void MainMenu::Draw()
 {
     
-    chatBox.setFillColor(sf::Color::Cyan);
+    /*chatBox.setFillColor(sf::Color::Cyan);
     chatBox.setOutlineColor(sf::Color::Black);
-    chatBox.setCharColor(sf::Color::Black);
+    chatBox.setCharColor(sf::Color::Black);*/
 
     m_context->m_window->clear(sf::Color::Blue);
-    chatBox.update();
-    chatBox.draw(*(m_context->m_window));
+    //chatBox.update();
+    //chatBox.draw(*(m_context->m_window));
 
     inputBox1.update();
     inputBox1.draw(*(m_context->m_window));

@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+
+
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
+
+
 
 enum types
 {
@@ -66,10 +70,17 @@ sf::Clock aggroClock;
 
 static net::AsyncTCPClient client;
 
+static ChatBox *chatBox;
+
+
 GamePlay::GamePlay(std::shared_ptr<Context>& context)
     : m_context(context)
 {
     srand(time(nullptr));
+    chatBox = new ChatBox(sf::Vector2f(50, 100), context->m_window->getSize().x / 3, 5, 20, 15, maumFont);
+    chatBox->setFillColor(sf::Color::Cyan);
+    chatBox->setOutlineColor(sf::Color::White);
+    chatBox->setCharColor(sf::Color::Black);
 }
 
 GamePlay::~GamePlay()
@@ -78,7 +89,7 @@ GamePlay::~GamePlay()
 
 void GamePlay::Init()
 {
-    
+   
     bool done = false;
 
 
@@ -86,7 +97,6 @@ void GamePlay::Init()
 
     
     maumFont.loadFromFile(RESOURCE_DIR + "godoMaum.ttf");
-    
 
     
     playerTexture.loadFromFile(RESOURCE_DIR + "rpg_sprite_walk.png");
@@ -286,6 +296,8 @@ void GamePlay::ProcessInput()
             update = true;
         else if (event.type == sf::Event::LostFocus)
             update = false;
+
+        chatBox->handleEvent(event, *(m_context->m_window));
     }
 }
 
@@ -734,7 +746,11 @@ void GamePlay::Update(sf::Time deltaTime)
 
 void GamePlay::Draw()
 {
+
     m_context->m_window->clear();
+
+    
+
     // draw item
     counter = 0;
     for (itemIter = itemArr.begin(); itemIter != itemArr.end(); itemIter++)
@@ -823,6 +839,20 @@ void GamePlay::Draw()
     hpText.setPosition(player1.collisionRect.getPosition().x - m_context->m_window->getSize().x / 2,
         player1.collisionRect.getPosition().y - m_context->m_window->getSize().y / 2 + 100);
 
+    chatBox->box1.setPosition(player1.collisionRect.getPosition().x - m_context->m_window->getSize().x / 2 + 40,
+        player1.collisionRect.getPosition().y - m_context->m_window->getSize().y / 4);
+    float x2 = chatBox->box1.getGlobalBounds().left + 5;
+    float y2 = chatBox->box1.getGlobalBounds().top + chatBox->box1.getGlobalBounds().height + 3 * chatBox->thickness;
+    chatBox->box2.setPosition(x2, y2);
+    chatBox->box3.setPosition(x2 + chatBox->box1.getSize().x - chatBox->box3.getSize().x, y2);
+
+    chatBox->box1.setOutlineThickness(chatBox->thickness);
+    chatBox->box2.setOutlineThickness(chatBox->thickness);
+    chatBox->box3.setOutlineThickness(chatBox->thickness);
+
+    chatBox->buttonText.setPosition(x2 + +chatBox->box1.getSize().x - chatBox->box3.getSize().x + 10, y2 + chatBox->thickness - 10);
+    chatBox->text.setPosition(x2 + chatBox->thickness, y2 + chatBox->thickness - 10);
+
 
     // draw ingameText
     counter = 0;
@@ -833,5 +863,9 @@ void GamePlay::Draw()
         counter++;
     }
     //
+
+    // draw chatBox
+    chatBox->update();
+    chatBox->draw(*(m_context->m_window));
     m_context->m_window->display();
 }

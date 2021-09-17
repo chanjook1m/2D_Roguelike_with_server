@@ -304,7 +304,7 @@ namespace net
                                 id = pack.id;
 
 
-                                //std::cout << "--->Request2222 : " << enemies.size() << std::endl;
+                                std::cout << "--->Request2222 : " << players.size() << std::endl;
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
 
                             }

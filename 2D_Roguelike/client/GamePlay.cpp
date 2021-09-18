@@ -21,6 +21,7 @@ Player player1(24, 32);
 int counter;
 int counter2;
 static int request_id = 1;
+static int chat_request_id = 1;
 
 sf::View view(sf::FloatRect(200, 200, 300, 200));
 
@@ -78,9 +79,9 @@ GamePlay::GamePlay(std::shared_ptr<Context>& context)
 {
     srand(time(nullptr));
     chatBox = new ChatBox(sf::Vector2f(50, 100), context->m_window->getSize().x / 3, 5, 20, 15, maumFont);
-    chatBox->setFillColor(sf::Color::Cyan);
+    chatBox->setFillColor(sf::Color::Transparent);
     chatBox->setOutlineColor(sf::Color::White);
-    chatBox->setCharColor(sf::Color::Black);
+    chatBox->setCharColor(sf::Color::White);
 }
 
 GamePlay::~GamePlay()
@@ -297,17 +298,28 @@ void GamePlay::ProcessInput()
         else if (event.type == sf::Event::LostFocus)
             update = false;
 
-        chatBox->handleEvent(event, *(m_context->m_window));
+        chatBox->handleEvent(event, *(m_context->m_window), player1.id);
     }
 }
 
 void GamePlay::Update(sf::Time deltaTime)
 {
     client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
-
+    sf::String ss;
+    
     client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 1);
 
+    if (generateRandom(10) == 1)
+        client.ReadChatOperation(10, "127.0.0.1", 5557, net::handler, chat_request_id++);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(33));
+
+    
+    if (net::chat.length())
+    {
+        chatBox->push(net::chat);
+        net::chat.clear();
+    }
 
     std::cout << "[INFO] PLAYER ID : " << player1.id << std::endl;
 
@@ -596,7 +608,7 @@ void GamePlay::Update(sf::Time deltaTime)
         player1.direction = generateRandom(5);
 
         player1.virtualKeyPressed = player1.direction;
-        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
+        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
     }
 
     //
@@ -734,7 +746,7 @@ void GamePlay::Update(sf::Time deltaTime)
             //shotSound.play();
             projectileClock.restart();
             //std::cout << "shooooooooooooooooooooooooooooooooooooooooooooooo" <<std::endl;
-            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
+            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
         }
     }
 
@@ -817,7 +829,7 @@ void GamePlay::Draw()
         player1.update();
         if (player1.updated == true)
         {
-            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 3);
+            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
             std::cout << "0000000000 updated " << std::endl;
 
         }

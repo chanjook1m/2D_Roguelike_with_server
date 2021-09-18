@@ -48,7 +48,7 @@ public:
 
 
 	void update();
-	void handleEvent(sf::Event& event, sf::RenderWindow& window);
+	void handleEvent(sf::Event& event, sf::RenderWindow& window, int id);
 
 	void push(const std::string& s);
 	void connectOnEnter(std::function<void(const std::string& s)> func);

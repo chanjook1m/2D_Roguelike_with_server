@@ -1,5 +1,9 @@
 #include "ChatBox.h"
+#include "client_interface.hpp"
 #include <iostream>
+
+static net::AsyncTCPClient client;
+int p_id = 0;
 
 ChatBox::ChatBox(const sf::Vector2f pos, const float length_, const float thickness_,
 	const int charSize_, const std::size_t historyLength_, const sf::Font& font) :
@@ -45,7 +49,7 @@ void ChatBox::update()
 	text.setString(s);
 }
 
-void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
+void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 {
 	if (event.type == sf::Event::TextEntered)
 	{
@@ -54,6 +58,8 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
 		if (event.text.unicode == 13)//enter
 		{
 			//onEnter(buffer);
+			std::string newStr = net::id + " : " + s.toAnsiString();
+			client.WriteOperation(0, "127.0.0.1", 5557, net::handler, p_id, newStr, 2);
 			s.clear();
 		}
 
@@ -82,7 +88,9 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
 				// The box has been selected
 				// Toggle the boolean
 			{
-				std::cout << "[aaaaaaaaaaaaaaa] send clicked" << std::endl;
+				std::cout << "[info] send clicked" << std::endl;
+				std::string newStr = std::to_string(id) + " : " + s.toAnsiString();
+				client.WriteOperation(0, "127.0.0.1", 5557, net::handler, p_id, newStr, 3);
 				s.clear();
 				//isSelected = !isSelected;
 

@@ -16,8 +16,8 @@ int player_id = 0;
 sf::Font font;
 
 //static ChatBox chatBox(sf::Vector2f(50, 100), 300, 5, 20, 15, font);
-InputBox inputBox1(sf::Vector2f(500, 500), 120, 50, 40, 15, font, 0);
-InputBox inputBox2(sf::Vector2f(500, 600), 120, 50, 40, 15, font, 1);
+InputBox* inputBox1;// (sf::Vector2f(500, 500), 120, 50, 40, 15, font, 0);
+InputBox* inputBox2;// (sf::Vector2f(500, 600), 120, 50, 40, 15, font, 1);
 
 sf::RectangleShape button(sf::Vector2f(120, 50));
 bool isSelected = false;
@@ -30,7 +30,10 @@ MainMenu::MainMenu(std::shared_ptr<Context>& context)
 	m_isPlayButtonPressed(false), m_isExitButtonSelected(false),
 	m_isExitButtonPressed(false)
 {
-
+    inputBox1 = new InputBox(sf::Vector2f(m_context->m_window->getSize().x / 2 - 50, m_context->m_window->getSize().y / 2 - 25.f),
+        120, 50, 40, 15, font, 0);
+    inputBox2 = new InputBox(sf::Vector2f(m_context->m_window->getSize().x / 2 - 50, m_context->m_window->getSize().y / 2 + 75.f),
+        120, 50, 40, 15, font, 1);
 }
 
 MainMenu::~MainMenu()
@@ -40,8 +43,7 @@ MainMenu::~MainMenu()
 
 void MainMenu::Init()
 {
-    
-    button.setPosition(500, 700);
+    button.setPosition(m_context->m_window->getSize().x / 2 - 50, m_context->m_window->getSize().y / 2 + 175.f);
 
 	// add font
 	
@@ -69,23 +71,23 @@ void MainMenu::Init()
     m_gameTitle.setPosition(m_context->m_window->getSize().x / 2,
         m_context->m_window->getSize().y / 2 - 150.f);
 
-    // Play Button
-    m_playButton.setFont(font);
-    m_playButton.setString("Play");
-    m_playButton.setOrigin(m_playButton.getLocalBounds().width / 2,
-        m_playButton.getLocalBounds().height / 2);
-    m_playButton.setPosition(m_context->m_window->getSize().x / 2,
-        m_context->m_window->getSize().y / 2 - 25.f);
-    m_playButton.setCharacterSize(20);
+    //// Play Button
+    //m_playButton.setFont(font);
+    //m_playButton.setString("Play");
+    //m_playButton.setOrigin(m_playButton.getLocalBounds().width / 2,
+    //    m_playButton.getLocalBounds().height / 2);
+    //m_playButton.setPosition(m_context->m_window->getSize().x / 2,
+    //    m_context->m_window->getSize().y / 2 - 25.f);
+    //m_playButton.setCharacterSize(20);
 
-    // Exit Button
-    m_exitButton.setFont(font);
-    m_exitButton.setString("Exit");
-    m_exitButton.setOrigin(m_exitButton.getLocalBounds().width / 2,
-        m_exitButton.getLocalBounds().height / 2);
-    m_exitButton.setPosition(m_context->m_window->getSize().x / 2,
-        m_context->m_window->getSize().y / 2 + 25.f);
-    m_exitButton.setCharacterSize(20);
+    //// Exit Button
+    //m_exitButton.setFont(font);
+    //m_exitButton.setString("Exit");
+    //m_exitButton.setOrigin(m_exitButton.getLocalBounds().width / 2,
+    //    m_exitButton.getLocalBounds().height / 2);
+    //m_exitButton.setPosition(m_context->m_window->getSize().x / 2,
+    //    m_context->m_window->getSize().y / 2 + 25.f);
+    //m_exitButton.setCharacterSize(20);
 }
 
 void MainMenu::ProcessInput()
@@ -156,19 +158,21 @@ void MainMenu::ProcessInput()
                 {
                     isSelected = !isSelected;
 
-                    std::string newStr1 = inputBox1.s.toAnsiString();
-                    std::string newStr2 = inputBox2.s.toAnsiString();
+                    std::string newStr1 = inputBox1->s.toAnsiString();
+                    std::string newStr2 = inputBox2->s.toAnsiString();
                     std::string newStr = newStr1 + ";" + sha256(newStr2);
 
                     std::cout << newStr << std::endl; 
 
                     client.WriteOperation(0, "127.0.0.1", 5556, net::handler, player_id, newStr, 2);
+
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                     std::cout << net::id << std::endl;
 
                     if (net::connected)
                     {
                         client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player_id, "", 0);
+                        
                         std::this_thread::sleep_for(std::chrono::seconds(3));
                     }
 
@@ -198,8 +202,8 @@ void MainMenu::ProcessInput()
         //std::cout << isSelected << std::endl;
         /*chatBox.handleEvent(event);
         std::string toBePushed;*/
-        inputBox1.handleEvent(event, *m_context->m_window);
-        inputBox2.handleEvent(event, *m_context->m_window);
+        inputBox1->handleEvent(event, *m_context->m_window);
+        inputBox2->handleEvent(event, *m_context->m_window);
     }
 }
 
@@ -242,11 +246,11 @@ void MainMenu::Draw()
     //chatBox.update();
     //chatBox.draw(*(m_context->m_window));
 
-    inputBox1.update();
-    inputBox1.draw(*(m_context->m_window));
+    inputBox1->update();
+    inputBox1->draw(*(m_context->m_window));
 
-    inputBox2.update();
-    inputBox2.draw(*(m_context->m_window));
+    inputBox2->update();
+    inputBox2->draw(*(m_context->m_window));
 
    
 

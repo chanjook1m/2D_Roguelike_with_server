@@ -608,14 +608,16 @@ namespace net
 
 			//oa&* (this);
 			cereal::PortableBinaryOutputArchive oa(oss);
-			oa(*this);
+			//oa(*this);
+			oa&* (this);
 
 		}
 		void load(std::string str_data)
 		{
 			std::istringstream iss(str_data);
 			cereal::PortableBinaryInputArchive ia(iss);
-			ia(*this);
+			//ia(*this);
+			ia&* (this);
 			//boost::archive::binary_iarchive ia(iss);
 			//ia&* (this);
 		}
@@ -749,6 +751,7 @@ namespace net
 	inline std::vector<Enemy> enemies;
 	inline std::vector<Item> items;
 	inline std::vector<Wall> walls;
+	inline std::string chat;
 
 	class receiver
 	{

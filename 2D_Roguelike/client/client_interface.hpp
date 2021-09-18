@@ -51,6 +51,7 @@ namespace net
         boost::asio::streambuf m_login_buf;
 
         boost::asio::streambuf m_response_buf;
+        boost::asio::streambuf m_chat_response_buf;
         std::string m_response;
 
         boost::system::error_code m_ec;
@@ -120,6 +121,12 @@ namespace net
             else if (request_id == 2)
             {
                 std::string request = request_; 
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));
+            }
+            else if (request_id == 3)
+            {
+                std::string request = request_;
                 session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
                     request, request_id, callback));
             }
@@ -230,6 +237,10 @@ namespace net
                                     onRequestComplete(session);
                                 }
                             }
+                            else if (request_id == 3)
+                            {
+
+                            }
                             
 
 
@@ -279,12 +290,12 @@ namespace net
                         {
                             if (ec)
                             {
-                                //std::cout << "[ERROR] read connect reqeust response failed" << std::endl;
+                                std::cout << "[ERROR] read connect reqeust response failed" << std::endl;
                                 session->m_ec = ec;
                             }
                             else
                             {
-                                //std::cout << "[SUCCESS] read connect reqeust response successful" << std::endl;
+                                std::cout << "[SUCCESS] read connect reqeust response successful" << std::endl;
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "successful");
                                 boost::asio::streambuf::const_buffers_type bufs = session->m_response_buf.data();
                                 std::string str(boost::asio::buffers_begin(bufs),
@@ -305,6 +316,79 @@ namespace net
 
 
                                 std::cout << "--->Request2222 : " << players.size() << std::endl;
+                                //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
+
+                            }
+
+                            onRequestComplete(session);
+                        });
+                });
+        };
+
+        void ReadChatOperation(unsigned int duration_sec,
+            const std::string& raw_ip_address,
+            unsigned short port_num,
+            Callback callback,
+            unsigned int request_id)
+        {
+            std::string request = "";
+
+            std::shared_ptr<Session> session =
+                std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));
+
+            session->m_sock.open(session->m_ep.protocol());
+
+            std::unique_lock<std::mutex> lock(m_active_sessions_guard);
+            m_active_sessions[request_id] = session;
+            lock.unlock();
+
+            //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "read operation");
+
+            session->m_sock.async_connect(session->m_ep,
+                [&, session](const boost::system::error_code& ec)
+                {
+                    if (ec)
+                    {
+                        std::cout << "[ERROR] chat request failed" << std::endl;
+                        session->m_ec = ec;
+                        onRequestComplete(session);
+                        return;
+                    }
+                    //std::cout << "[SUCCESS] connect request successful" << std::endl;
+                    //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "recv connect successful");
+                    //std::cout << "read connect reqeust response start" << std::endl;
+                    boost::asio::async_read_until(session->m_sock,
+                        session->m_chat_response_buf,
+                        //boost::asio::transfer_at_least(packetSize),
+                        "\r\n",
+                        [this, session](const boost::system::error_code& ec,
+                            std::size_t bytes_transferred)
+                        {
+                            if (ec)
+                            {
+                                std::cout << "[ERROR] read chat failed" << std::endl;
+                                session->m_ec = ec;
+                            }
+                            else
+                            {
+                                std::cout << "[SUCCESS] read chat successful" << std::endl;
+                                //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "successful");
+                                boost::asio::streambuf::const_buffers_type bufs = session->m_chat_response_buf.data();
+                                std::string str(boost::asio::buffers_begin(bufs),
+                                    boost::asio::buffers_begin(bufs) + bufs.size());
+
+                                ServerPacket pack;
+
+                                pack.load(str);
+
+                                chat = pack.msg;
+
+                                
+                                //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "response : %d ", str.size());
+
+
+                                std::cout << "--->[CHAT RESPONSE] : " << chat << std::endl;
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
 
                             }

@@ -22,11 +22,12 @@ private:
 
 	
 	sf::Text historyText;
-	std::deque<std::string> history;
+	std::deque<sf::String> history;
 
 	std::string buffer;
 
 	sf::String s;
+	std::string b;
 
 	std::function<void(const std::string& s)> onEnter;
 public:
@@ -50,7 +51,7 @@ public:
 	void update();
 	void handleEvent(sf::Event& event, sf::RenderWindow& window, int id);
 
-	void push(const std::string& s);
+	void push(std::wstring& s);
 	void connectOnEnter(std::function<void(const std::string& s)> func);
 
 	void draw(sf::RenderWindow& window);

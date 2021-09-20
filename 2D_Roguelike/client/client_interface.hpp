@@ -49,6 +49,7 @@ namespace net
         std::string m_request;
         boost::asio::streambuf m_request_buf;
         boost::asio::streambuf m_login_buf;
+        boost::asio::streambuf m_chat_buf;
 
         boost::asio::streambuf m_response_buf;
         boost::asio::streambuf m_chat_response_buf;
@@ -63,6 +64,7 @@ namespace net
         bool m_was_cancelled;
         std::mutex m_cancel_guard;
     };
+
 
     static void handler(unsigned int request_id,
         const std::string& response,
@@ -100,7 +102,7 @@ namespace net
             unsigned short port_num,
             Callback callback,
             int& player_id,
-            std::string request_,
+            std::string& request_,
             unsigned int request_id)
         {
             //std::string request = "Operation " + std::to_string(key) + "\n";
@@ -121,6 +123,7 @@ namespace net
             else if (request_id == 2)
             {
                 std::string request = request_; 
+                //std::cout << "reqreq : " << request_ << " : " << request.length() << std::endl;
                 session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
                     request, request_id, callback));
             }
@@ -325,6 +328,175 @@ namespace net
                 });
         };
 
+        void WriteChatOperation(unsigned int key,
+            const std::string& raw_ip_address,
+            unsigned short port_num,
+            Callback callback,
+            int& player_id,
+            std::wstring& request_,
+            unsigned int request_id)
+        {
+            //std::string request = "Operation " + std::to_string(key) + "\n";
+            std::shared_ptr<Session> session;
+            //
+            if (request_id == 0)
+            {
+                /*std::string request = "connect";
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));*/
+            }
+            else if (request_id == 1)
+            {
+                /*std::string request = "id_" + std::to_string(player_id);
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));*/
+            }
+            else if (request_id == 2)
+            {
+
+                boost::asio::streambuf buf;
+                net::ChatPacket chatPack;
+
+                chatPack.msg = request_;
+                std::ostream oss(&buf);
+
+                chatPack.save(oss);
+
+                //std::cout << "reqreq : " << request_ << " : " << request.length() << std::endl;
+                boost::asio::streambuf::const_buffers_type bufs = buf.data();
+                std::string chat(boost::asio::buffers_begin(bufs),
+                    boost::asio::buffers_begin(bufs) + bufs.size());
+                
+                std::string request = chat;
+                request += "\r\n";
+                
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));
+            }
+            else if (request_id == 3)
+            {
+                /*std::string request = request_;
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    request, request_id, callback));*/
+            }
+            else
+            {
+                boost::asio::streambuf buf;
+                ChatPacket p(key, player_id, request_);
+
+                std::ostream oss(&buf);
+                p.save(oss);
+                boost::asio::streambuf::const_buffers_type bufs = buf.data();
+                std::string str(boost::asio::buffers_begin(bufs),
+                    boost::asio::buffers_begin(bufs) + bufs.size());
+
+                //
+                session = std::shared_ptr<Session>(new Session(m_io, raw_ip_address, port_num,
+                    str, request_id, callback));
+            }
+
+            session->m_sock.open(session->m_ep.protocol());
+
+            std::unique_lock<std::mutex> lock(m_active_sessions_guard);
+            m_active_sessions[session_id++] = session;
+            lock.unlock();
+
+            session->m_sock.async_connect(session->m_ep,
+                [&, session, request_id](const boost::system::error_code& ec)
+                {
+                    if (ec)
+                    {
+                        session->m_ec = ec;
+                        std::cout << "[REQUEST err] " << ec.message() << std::endl;
+                        //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "ERROR: %s", ec.message().c_str());
+                        //onRequestComplete(session);
+                        return;
+                    }
+
+                    std::cout << "[REQUEST] " << session->m_request << std::endl;
+                    //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "REQUEST: %s", session->m_request.c_str());
+                    boost::asio::async_write(session->m_sock, boost::asio::buffer(session->m_request),
+                        [this, session, request_id](const boost::system::error_code& ec, std::size_t bytes_transferred)
+                        {
+                            if (ec)
+                            {
+                                session->m_ec = ec;
+                                std::cout << "[REQUEST err] " << ec.message() << std::endl;
+                                onRequestComplete(session);
+                                return;
+                            }
+
+               //             if (request_id == 0 || request_id == 2)//session->m_request == "connect")
+               //             {
+
+               //                 std::cout << "connect start " << std::endl;
+
+               //                 // read connect response from server start
+
+               //                 boost::system::error_code ec;
+
+               //                 boost::asio::read_until(session->m_sock,
+               //                     session->m_chat_buf,
+               //                     "\r\n", ec);
+
+               //                 {
+               //                     if (ec)
+               //                     {
+               //                         std::cout << "[ERROR] read connect response from server failed" << std::endl;
+               //                         session->m_ec = ec;
+               //                     }
+               //                     else
+               //                     {
+               //                         //std::this_thread::sleep_for(std::chrono::seconds(5));
+               //                         std::cout << "[SUCCESS] read connect response from server successful" << std::endl;
+
+               //                         boost::asio::streambuf::const_buffers_type bufs = session->m_chat_buf.data();
+               //                         std::string str(boost::asio::buffers_begin(bufs),
+               //                             boost::asio::buffers_begin(bufs) + bufs.size());
+               //                         ServerPacket pack;
+               //                         pack.load(str);
+
+
+               //                         //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "ssss : %s", str.c_str());
+               //                         //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "ssss : %d", pack.type);
+
+
+               ///*
+               //                         //// For atoi, the input string has to start with a digit, so lets search for the first digit
+               //                         size_t i = 0;
+               //                         for (; i < str.length(); i++) { if (str[i]>=48 && str[i] <= 57) break; }
+
+               //                         //// remove the first chars, which aren't digits
+               //                         str = str.substr(i, str.length() - i);
+               //                            __android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "ssss : %s", str.c_str());
+               //                         // convert the remaining text to an integer
+               //                         int netId = atoi(str.c_str());//
+               // */
+               //                         //int netId = pack.id;
+
+               //                         //std::cout << "[INFO] player id : " << netId << std::endl;
+               //                         //if (netId > 0)//str == "connected")
+               //                         //{
+               //                         //    connected = true;
+               //                         //    id = netId;
+               //                         //}
+
+               //                     }
+
+               //                     onRequestComplete(session);
+               //                 }
+               //             }
+               //             else if (request_id == 3)
+               //             {
+
+               //             }
+
+                            onRequestComplete(session);
+
+                        });
+                });
+        };
+
         void ReadChatOperation(unsigned int duration_sec,
             const std::string& raw_ip_address,
             unsigned short port_num,
@@ -388,7 +560,7 @@ namespace net
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "response : %d ", str.size());
 
 
-                                std::cout << "--->[CHAT RESPONSE] : " << chat << std::endl;
+                                std::wcout << "--->[CHAT RESPONSE] : " << chat << std::endl;
                                 //__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
 
                             }
@@ -454,6 +626,7 @@ namespace net
     private:
         boost::asio::io_context m_io;
         std::map<int, std::shared_ptr<Session>> m_active_sessions;
+        //std::map<int, std::shared_ptr<ChatSession>> m_active_sessions2;
         std::mutex m_active_sessions_guard;
         std::unique_ptr<boost::asio::io_context::work> m_work;
         std::unique_ptr<std::thread> m_thread;

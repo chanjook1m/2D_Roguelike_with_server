@@ -1,6 +1,9 @@
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING 
 #include "ChatBox.h"
 #include "client_interface.hpp"
 #include <iostream>
+#include <atlconv.h>
+
 
 static net::AsyncTCPClient client;
 int p_id = 0;
@@ -58,13 +61,24 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 		if (event.text.unicode == 13)//enter
 		{
 			//onEnter(buffer);
-			std::string newStr = net::id + " : " + s.toAnsiString();
-			client.WriteOperation(0, "127.0.0.1", 5557, net::handler, p_id, newStr, 2);
+			//std::string a = s.toAnsiString();	
+			std::string newStr("¾È³ç" + s);
+			std::wstring st(std::to_wstring(id) + L" : " + s.toWideString());
+			//std::wcout << "asdf " << st << std::endl;
+			//push(st);
+			
+			std::wcout << "asdf : " << st << std::endl;
+			//std::string newStr(s);// id + " : " + s.toAnsiString();
+			
+			client.WriteChatOperation(0, "127.0.0.1", 5557, net::handler, p_id, st, 2);
 			s.clear();
 		}
 
 		else if (code != '\b')
+		{
 			s += event.text.unicode;//buffer.push_back(code);
+			//std::cout << "asdf : " << event.text.unicode << std::endl;
+		}
 		else if (code == '\b')
 		{
 			/*if (buffer.size() > 0)
@@ -88,7 +102,7 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 				// The box has been selected
 				// Toggle the boolean
 			{
-				std::cout << "[info] send clicked" << std::endl;
+				//std::cout << "[info] send clicked" << std::endl;
 				std::string newStr = std::to_string(id) + " : " + s.toAnsiString();
 				client.WriteOperation(0, "127.0.0.1", 5557, net::handler, p_id, newStr, 3);
 				s.clear();
@@ -124,11 +138,16 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 	//}
 }
 
-void ChatBox::push(const std::string& s)
+void ChatBox::push(std::wstring& s)
 {
 	if (s.size() > 0)
 	{
-		history.push_front(s);
+		/*USES_CONVERSION;
+		std::wstring message_w(A2W(s.c_str()));
+		sf::String b(message_w);*/
+		sf::String b(s);
+		
+		history.push_front(b);//s);
 		if (history.size() > historyLength)
 			history.pop_back();
 	}

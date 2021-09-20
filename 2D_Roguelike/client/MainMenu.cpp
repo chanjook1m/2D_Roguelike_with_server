@@ -171,7 +171,7 @@ void MainMenu::ProcessInput()
 
                     if (net::connected)
                     {
-                        client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player_id, "", 0);
+                        client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player_id, newStr, 0);
                         
                         std::this_thread::sleep_for(std::chrono::seconds(3));
                     }

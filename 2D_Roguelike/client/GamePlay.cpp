@@ -307,7 +307,8 @@ void GamePlay::Update(sf::Time deltaTime)
     client.ReadOperation(10, "127.0.0.1", 5555, net::handler, request_id++);
     sf::String ss;
     
-    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 1);
+    std::string newStr = "";
+    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, newStr, 1);
 
     if (generateRandom(10) == 1)
         client.ReadChatOperation(10, "127.0.0.1", 5557, net::handler, chat_request_id++);
@@ -608,7 +609,8 @@ void GamePlay::Update(sf::Time deltaTime)
         player1.direction = generateRandom(5);
 
         player1.virtualKeyPressed = player1.direction;
-        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
+        std::string newStr = "";
+        client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, newStr, 4);
     }
 
     //
@@ -746,7 +748,8 @@ void GamePlay::Update(sf::Time deltaTime)
             //shotSound.play();
             projectileClock.restart();
             //std::cout << "shooooooooooooooooooooooooooooooooooooooooooooooo" <<std::endl;
-            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
+            std::string newStr = "";
+            client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, newStr, 4);
         }
     }
 
@@ -829,7 +832,8 @@ void GamePlay::Draw()
         player1.update();
         if (player1.updated == true)
         {
-            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, "", 4);
+            std::string newStr = "";
+            client.WriteOperation(player1.direction, "127.0.0.1", 5555, net::handler, player1.id, newStr, 4);
             std::cout << "0000000000 updated " << std::endl;
 
         }

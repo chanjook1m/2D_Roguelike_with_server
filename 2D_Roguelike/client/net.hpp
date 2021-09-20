@@ -560,7 +560,7 @@ namespace net
 	{
 		int type = 0;
 		int id = 0;
-		std::string msg;
+		std::wstring msg;
 		std::vector<Player> players;
 		std::vector<Projectile> projectiles;
 		std::vector<Enemy> enemies;
@@ -595,7 +595,7 @@ namespace net
 
 		}
 
-		ServerPacket(std::string msg) : msg(msg)
+		ServerPacket(std::wstring msg) : msg(msg)
 		{
 
 		}
@@ -656,16 +656,65 @@ namespace net
 
 			//oa&* (this);
 			cereal::PortableBinaryOutputArchive oa(oss);
-			oa(*this);
+			//oa(*this);
+			oa&* (this);
 
 		}
 		void load(std::string str_data)
 		{
 			std::istringstream iss(str_data);
 			cereal::PortableBinaryInputArchive ia(iss);
-			ia(*this);
+			//ia(*this);
 			//boost::archive::binary_iarchive ia(iss);
-			//ia&* (this);
+			ia&* (this);
+		}
+	};
+
+	struct ChatPacket
+	{
+
+		int key; // 1 = up, ... , 5 = space
+		int player_id;
+		std::wstring msg;
+
+
+
+		//friend class boost::serialization::access;
+		template<class Archive>
+		void serialize(Archive& ar, std::uint32_t const version)
+		{
+			ar(key, player_id, msg);
+			//ar& key;
+			//ar& player_id;
+		}
+
+
+		ChatPacket()
+		{
+
+		}
+		ChatPacket(int key, int player_id, std::wstring msg) : key(key), player_id(player_id), msg(msg)
+		{
+
+		}
+
+		void save(std::ostream& oss)
+		{
+			//boost::archive::binary_oarchive oa(oss);
+
+			//oa&* (this);
+			cereal::PortableBinaryOutputArchive oa(oss);
+			//oa(*this);
+			oa&* (this);
+
+		}
+		void load(std::string str_data)
+		{
+			std::istringstream iss(str_data);
+			cereal::PortableBinaryInputArchive ia(iss);
+			//ia(*this);
+			//boost::archive::binary_iarchive ia(iss);
+			ia&* (this);
 		}
 	};
 
@@ -751,7 +800,7 @@ namespace net
 	inline std::vector<Enemy> enemies;
 	inline std::vector<Item> items;
 	inline std::vector<Wall> walls;
-	inline std::string chat;
+	inline std::wstring chat;
 
 	class receiver
 	{

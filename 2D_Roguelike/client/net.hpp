@@ -1,7 +1,6 @@
 #pragma once
 #include <iostream>
 
-
 #include <boost/serialization/serialization.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -19,9 +18,11 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/binary.hpp>
 
+
+
 namespace net
 {
-
+	
 	static bool generateRandomBool()
 	{
 		int randomNumber = rand();
@@ -56,6 +57,10 @@ namespace net
 		}
 	}
 
+	/**
+	* @brief 테스트 클래스
+	* 
+	*/
 	class Wall
 	{
 		//friend class boost::serialization::access;
@@ -673,7 +678,7 @@ namespace net
 	struct ChatPacket
 	{
 
-		int key; // 1 = up, ... , 5 = space
+
 		int player_id;
 		std::wstring msg;
 
@@ -683,7 +688,7 @@ namespace net
 		template<class Archive>
 		void serialize(Archive& ar, std::uint32_t const version)
 		{
-			ar(key, player_id, msg);
+			ar(player_id, msg);
 			//ar& key;
 			//ar& player_id;
 		}
@@ -693,7 +698,7 @@ namespace net
 		{
 
 		}
-		ChatPacket(int key, int player_id, std::wstring msg) : key(key), player_id(player_id), msg(msg)
+		ChatPacket(int player_id, std::wstring msg) : player_id(player_id), msg(msg)
 		{
 
 		}
@@ -869,5 +874,142 @@ namespace net
 		boost::asio::ip::udp::endpoint sender_endpoint_;
 		enum { max_length = 1000000 };
 		char data_[max_length];
+	};
+
+	class receiver2
+	{
+	public:
+		receiver2(boost::asio::io_context& io_context,
+			const std::string& raw_ip_address,
+			const int port_num)
+			: socket_(io_context)
+		{
+			// Create the socket so that multiple may be bound to the same address.
+			
+			boost::asio::ip::tcp::endpoint m_ep(boost::asio::ip::address::from_string(raw_ip_address),
+				port_num);
+
+
+			if (stopped)
+			{
+				std::cout << "[chat connect]" << std::endl;
+				socket_.open(m_ep.protocol());
+				//socket_.set_option(boost::asio::ip::tcp::socket::reuse_address(true));
+
+				socket_.async_connect(m_ep,
+					[&](const boost::system::error_code& ec)
+					{
+						if (ec)
+						{
+							std::cout << "[ERROR] chat request failed" << std::endl;
+							return;
+						}
+						std::cout << "[SUCCESS] connect request successful" << std::endl;
+						//__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "recv connect successful");
+						//std::cout << "read connect reqeust response start" << std::endl;
+						
+						stopped = false;
+
+						start_read();
+						
+					});
+			}
+			
+		}
+
+		void start_read()
+		{
+			boost::asio::async_read_until(socket_,
+				m_chat_response_buf,
+				//boost::asio::transfer_at_least(packetSize),
+				"\r\n", boost::bind(&receiver2::handle_receive_from, this,
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+		}
+
+		void handle_receive_from(const boost::system::error_code& error,
+			size_t bytes_recvd)
+		{
+			if (stopped)
+				return;
+			if (!error)
+			{
+				std::cout << "[SUCCESS] read chat successful" << std::endl;
+				//__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "successful");
+				boost::asio::streambuf::const_buffers_type bufs = m_chat_response_buf.data();
+				std::string str(boost::asio::buffers_begin(bufs),
+					boost::asio::buffers_begin(bufs) + bufs.size());
+
+				ChatPacket pack;
+
+				pack.load(str);
+
+				chat = pack.msg;
+
+				m_chat_response_buf.consume(m_chat_response_buf.size() + 1);
+
+				start_read();
+
+			}
+			else
+			{
+				stop();
+			}
+		}
+
+		void stop()
+		{
+			stopped = true;
+		}
+
+		void read()
+		{
+			boost::asio::async_read_until(socket_,
+				m_chat_response_buf,
+				//boost::asio::transfer_at_least(packetSize),
+				"\r\n",
+				[this](const boost::system::error_code& ec,
+					std::size_t bytes_transferred)
+				{
+					if (ec)
+					{
+						std::cout << "[ERROR] read chat failed" << std::endl;
+					}
+					else
+					{
+						std::cout << "[SUCCESS] read chat successful" << std::endl;
+						//__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "successful");
+						boost::asio::streambuf::const_buffers_type bufs = m_chat_response_buf.data();
+						std::string str(boost::asio::buffers_begin(bufs),
+							boost::asio::buffers_begin(bufs) + bufs.size());
+
+						ServerPacket pack;
+
+						pack.load(str);
+
+						chat = pack.msg;
+
+
+						//__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "response : %d ", str.size());
+
+
+						std::wcout << "--->[CHAT RESPONSE] : " << chat << std::endl;
+						//__android_log_print(ANDROID_LOG_INFO, "CONNECTION_TEST", "request : %d", pack.id);
+
+					}
+
+					//onRequestComplete(session);
+				});
+		}
+
+
+	private:
+		bool stopped = true;
+		boost::asio::ip::tcp::endpoint m_ep;
+		boost::asio::ip::tcp::socket socket_;
+		boost::asio::ip::tcp::endpoint sender_endpoint_;
+		enum { max_length = 1000000 };
+		char data_[max_length];
+		boost::asio::streambuf m_chat_response_buf;
 	};
 }

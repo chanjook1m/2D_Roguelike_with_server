@@ -7,7 +7,6 @@ InputBox::InputBox(const sf::Vector2f pos, const float width_, const float heigh
 {
 	box.setPosition(pos);
 	box.setSize(sf::Vector2f(width_, height_));
-	
 
 	text.setFont(font);
 	text.setCharacterSize(charSize);
@@ -50,17 +49,14 @@ void InputBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
 			buffer.clear();
 		}
 
-		else if (code != '\b')
+		else if (code != '\b' && s.getSize() < 6)
 		{
 
 			s += event.text.unicode;//buffer.push_back(code);
 		}
 		else if (code == '\b')
 		{
-			/*if (buffer.size() > 0)
-				buffer.pop_back();*/
 			if (s.getSize() > 0) {
-				//std::cout << "문자열길이 : " << s.getSize() << std::endl;
 				s.erase(s.getSize() - 1); //마지막글자를 지운다.
 			}
 		}
@@ -81,13 +77,6 @@ void InputBox::handleEvent(sf::Event& event, sf::RenderWindow& window)
 			}
 		}
 	}
-	//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::BackSpace))
-	//{
-	//	if (s.getSize() > 0) {
-	//		//std::cout << "문자열길이 : " << s.getSize() << std::endl;
-	//		s.erase(s.getSize() - 1); //마지막글자를 지운다.
-	//	}
-	//}
 }
 
 void InputBox::push(const std::string& s)
@@ -130,6 +119,7 @@ void InputBox::setOutlineColor(const sf::Color& color)
 void InputBox::setFillColor(const sf::Color& color)
 {
 	box.setFillColor(color);
+	
 }
 
 void InputBox::setCharColor(const sf::Color& color)

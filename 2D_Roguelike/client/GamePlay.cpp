@@ -140,8 +140,8 @@ void GamePlay::Init()
     view.setCenter(sf::Vector2f(view.getSize().x / 2, view.getSize().y / 2));
     m_context->m_window->setView(view);
 
-    if (STRESS_TEST == true)
-        m_context->m_window->setVisible(false);
+    //if (STRESS_TEST == true)
+    //    m_context->m_window->setVisible(false);
 
 
 
@@ -164,8 +164,6 @@ void GamePlay::Init()
     
     sf::Sprite energyBallSprite;
     energyBallSprite.setScale(sf::Vector2f(0.1, 0.1));
-
-
 
     sf::SoundBuffer shotBuffer;
     shotBuffer.loadFromFile(RESOURCE_DIR + "shot.ogg");
@@ -215,51 +213,23 @@ void GamePlay::Init()
 
     // objects and objects array
 
-    
-
     projectile.sprite = energyBallSprite;
 
-    
-
-    
     enemy.sprite.setTexture(enemyTexture);
     enemy.text.setFont(maumFont);
     enemy.text.setFillColor(sf::Color::Red);
-
-    
-
     
     item.sprite.setTexture(coinTexture);
     item.sprite.setScale(sf::Vector2f(0.2, 0.2));
-    
-    
 
     wall.sprite.setTextureRect(sf::IntRect(0, 0, 18, 18));
     wall.sprite.setTexture(wallTexture);
     wall.sprite.setScale(3.0, 3.0);
 
-    //// create room
-    //int roomSize = 10;
-    //int bossRoomSize = 15;
-    //int verticalDoorAt = 2;
-    //int horizontalDoorAt = 2;
-    //int initialRoomX = 200;
-    //int initialRoomY = 300;
-
-    //// generate shop item
-    //item = Item(0, 0, 100, 100, POWERUP);
-
     Enemy boss(48 * 6, 0, 48, 48);
     boss.sprite.setTexture(enemyTexture);
     boss.text.setFont(maumFont);
     boss.text.setFillColor(sf::Color::Red);
-    /*boss.maxHp = 100;
-    boss.hp = 100;
-    boss.attackDamage = 10;
-    boss.collisionRect.setPosition(50 * bossRoomSize/2 + initialRoomX + (bossRoomSize * 50 * 2) + 100, (bossRoomSize/2 * 50) + 50 + initialRoomY);*/
-
-    //enemyArr.push_back(boss);
-
     
     ingameText.text.setPosition(200, 200);
     ingameText.text.setFont(maumFont);
@@ -310,8 +280,8 @@ void GamePlay::Update(sf::Time deltaTime)
     std::string newStr = "";
     client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player1.id, newStr, 1);
 
-    if (generateRandom(10) == 1)
-        client.ReadChatOperation(10, "127.0.0.1", 5557, net::handler, chat_request_id++);
+    //if (generateRandom(10) == 1)
+        //client.ReadChatOperation(10, "127.0.0.1", 5557, net::handler, chat_request_id++);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(33));
 

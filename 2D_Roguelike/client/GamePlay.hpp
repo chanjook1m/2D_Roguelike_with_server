@@ -24,7 +24,7 @@
 #include "Chatbox.h"
 #define RESOURCE_DIR (string)"C:\\Users\\1z3r0\\Desktop\\game\\2D_Roguelike\\Resources\\"
 
-#define STRESS_TEST false
+#define STRESS_TEST true
 
 using namespace std;
 

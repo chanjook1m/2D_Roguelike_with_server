@@ -2,6 +2,9 @@
 
 #include "Game.hpp"
 #include "MainMenu.hpp"
+#include <boost/asio.hpp>
+#include "net.hpp"
+
 
 Game::Game() : m_context(std::make_shared<Context>())
 {
@@ -20,6 +23,17 @@ void Game::Run()
 
     sf::Clock clock;
     sf::Time timeSinceLastFrame = sf::Time::Zero;
+
+    boost::asio::io_context tcp_io_context;
+    
+    std::unique_ptr<std::thread> th(new std::thread([&]()
+        {
+            net::receiver2 r(tcp_io_context,
+                "127.0.0.1",
+                5557);
+
+            tcp_io_context.run();
+        }));
 
     while (m_context->m_window->isOpen())
     {

@@ -13,6 +13,16 @@
 
 #include "net.hpp"
 
+#include <mysql/jdbc.h>
+#include <jdbc/cppconn/driver.h>
+
+#include <jdbc/cppconn/exception.h>
+#include <jdbc/cppconn/resultset.h>
+#include <jdbc/cppconn/statement.h>
+#include <jdbc/cppconn/prepared_statement.h>
+
+
+
 enum types
 {
 	COIN = 1,
@@ -36,7 +46,345 @@ unsigned int projectile_id = 0;
 int wall_id = 0;
 int enemy_id = 0;
 int item_id = 0;
+
 int counter, counter2;
+
+
+const short multicast_port = 30001;
+
+class sender
+{
+public:
+	sender(boost::asio::io_context& io_context,
+		const boost::asio::ip::address& multicast_address)
+		: endpoint_(multicast_address, multicast_port),
+		socket_(io_context, endpoint_.protocol()),
+		timer_(io_context),
+		message_count_(0)
+	{
+		socket_.async_send_to(
+			boost::asio::buffer(message_), endpoint_,
+			boost::bind(&sender::handle_send_to, this,
+				boost::asio::placeholders::error));
+	}
+
+	void handle_send_to(const boost::system::error_code& error)
+	{
+		if (!error)
+		{
+			timer_.expires_from_now(boost::posix_time::milliseconds(10));
+			timer_.async_wait(
+				boost::bind(&sender::handle_timeout, this,
+					boost::asio::placeholders::error));
+		}
+	}
+
+	void handle_timeout(const boost::system::error_code& error)
+	{
+		if (!error)
+		{
+			// update objects
+			// items
+			for (int i = 0; i < items.size(); i++)
+			{
+				// players - item collision
+				for (int j = 0; j < players.size(); j++)
+				{
+					if (net::detectCollision(players[j], items[i]))
+					{
+						if (items[i].inShop == false)
+						{
+							if (items[i].type == COIN)
+							{
+								players[j].score += 20;
+							}
+							else if (items[i].type == POWERUP)
+							{
+
+								if (players[j].powerUpLevel < players[j].maxPowerUpLevel)
+								{
+
+									players[j].powerUpLevel++;
+								}
+							}
+							items[i].isAlive = false;
+						}
+						else // shopitem
+						{
+							if (players[j].score >= items[i].cost && players[j].powerUpLevel < 5)
+							{
+								int num = players[j].score / items[i].cost;
+
+								if (players[j].powerUpLevel + num >= 5)
+								{
+									num = 5 - players[j].powerUpLevel;
+									players[j].powerUpLevel = 5;
+								}
+								else
+								{
+									players[j].powerUpLevel += num;
+								}
+								players[j].score -= items[i].cost * num;
+
+							}
+						}
+					}
+				}
+
+				if (items[i].isAlive == false)
+				{
+					items.erase(items.begin() + i);
+				}
+			}
+
+			// walls
+			for (int i = 0; i < walls.size(); i++)
+			{
+
+				// enemy - wall collision
+				for (int j = 0; j < enemies.size(); j++)
+				{
+					if (net::detectCollision(enemies[j], walls[i]))
+					{
+						if (enemies[j].direction == 1)
+						{
+							enemies[j].canMoveUp = false;
+							enemies[j].direction = net::generateRandom(4);
+							enemies[j].temp_y += enemies[j].velocity;
+						}
+						else if (enemies[j].direction == 2)
+						{
+							enemies[j].canMoveDown = false;
+
+							enemies[j].direction = net::generateRandom(4);
+							enemies[j].temp_y -= enemies[j].velocity;
+						}
+						else if (enemies[j].direction == 3)
+						{
+							enemies[j].canMoveLeft = false;
+							enemies[j].direction = net::generateRandom(4);
+							enemies[j].temp_x += enemies[j].velocity;
+						}
+						else if (enemies[j].direction == 4)
+						{
+							enemies[j].canMoveRight = false;
+							enemies[j].direction = net::generateRandom(4);
+							enemies[j].temp_x -= enemies[j].velocity;
+						}
+					}
+				}
+
+				// projectile - wall collision
+				for (int j = 0; j < projectiles.size(); j++)
+				{
+					if (net::detectCollision(walls[i], projectiles[j]))
+					{
+
+
+						projectiles[j].isAlive = false;
+						if (walls[i].destructible == true)
+						{
+							walls[i].hp -= projectiles[j].attackDamage;
+						}
+
+						if (walls[i].hp <= 0)
+						{
+							walls[i].isAlive = false;
+						}
+					}
+				}
+
+				if (walls[i].isAlive == false)
+				{
+					walls.erase(walls.begin() + i);
+				}
+			}
+
+			// projectile
+			for (int i = 0; i < projectiles.size(); i++)
+			{
+				projectiles[i].update();
+
+				// projectile - enemy collision
+				for (int j = 0; j < enemies.size(); j++)
+				{
+					if (net::detectCollision(enemies[j], projectiles[i]))
+					{
+						projectiles[i].isAlive = false;
+						enemies[j].aggroedBy = projectiles[i].id;
+						enemies[j].hp -= projectiles[i].attackDamage;
+
+						if (enemies[j].hp <= 0)
+						{
+							enemies[j].isAlive = false;
+							enemies[j].aggroedBy = 0;
+						}
+					}
+				}
+
+				//// projectile - players collision
+				//for (int j = 0; j < players.size(); j++)
+				//{
+				//	if (net::detectCollision(projectiles[i], players[j]))
+				//	{
+				//		projectiles[i].isAlive = false;
+				//		players[j].hp -= projectiles[i].attackDamage;
+
+				//		if (players[j].hp <= 0)
+				//		{
+				//			players[j].isAlive = false;
+				//		}
+				//	}
+				//}
+
+
+
+				if (projectiles[i].isAlive == false)
+				{
+					projectiles.erase(projectiles.begin() + i);
+				}
+			}
+
+			// enemyMonster
+			for (int i = 0; i < enemies.size(); i++)
+			{
+				enemies[i].update();
+
+				// enemyMonster - player collision
+				for (int j = 0; j < players.size(); j++)
+				{
+					if (abs(players[j].collisionRect_y - enemies[i].collisionRect_y) <= 100 &&
+						abs(players[j].collisionRect_x - enemies[i].collisionRect_x) <= 100)
+					{
+						enemies[i].aggroedBy = players[j].id;
+					}
+					else
+					{
+						enemies[i].aggroedBy = 0;
+					}
+
+					if (net::detectCollision(players[j], enemies[i]))
+					{
+						players[j].hp -= enemies[i].attackDamage;
+
+						if (players[j].hp < 0)
+							players[j].hp = 0;
+
+						if (players[j].powerUpLevel > 1)
+						{
+							players[j].powerUpLevel--;
+						}
+
+
+					}
+				}
+
+				// AI
+				for (int j = 0; j < players.size(); j++)
+				{
+
+					if (enemies[i].aggroedBy == players[j].id)
+					{
+						if (players[j].collisionRect_x < enemies[i].collisionRect_x &&
+							players[j].collisionRect_y - enemies[i].collisionRect_y <= 40)
+						{
+							enemies[i].direction = 3;
+						}
+						if (players[j].collisionRect_x > enemies[i].collisionRect_x &&
+							players[j].collisionRect_y - enemies[i].collisionRect_y <= 40)
+						{
+							enemies[i].direction = 4;
+						}
+						if (players[j].collisionRect_y < enemies[i].collisionRect_y &&
+							players[j].collisionRect_x - enemies[i].collisionRect_x <= 40)
+						{
+							enemies[i].direction = 1;
+						}
+						if (players[j].collisionRect_y > enemies[i].collisionRect_y &&
+							players[j].collisionRect_x - enemies[i].collisionRect_x <= 80)
+						{
+							enemies[i].direction = 2;
+						}
+					}
+				}
+
+
+
+
+				if (enemies[i].isAlive == false)
+				{
+					// generate item           
+					item.isAlive = true;
+					int random = net::generateRandom(2);
+
+					if (random == 1)
+					{
+						item.collisionRect_x = enemies[i].collisionRect_x;
+						item.collisionRect_y = enemies[i].collisionRect_y;
+						item.type = COIN;
+						item.scaleValue = item.type == COIN ? 0.2 : 0.4;
+						item.id = item_id++;
+						items.push_back(item);
+					}
+					else if (random == 2)
+					{
+						item.collisionRect_x = enemies[i].collisionRect_x;
+						item.collisionRect_y = enemies[i].collisionRect_y;
+						item.type = POWERUP;
+						item.scaleValue = item.type == COIN ? 0.2 : 0.4;
+						item.id = item_id++;
+						items.push_back(item);
+					}
+					enemies.erase(enemies.begin() + i);
+				}
+			}
+
+
+			boost::asio::streambuf buf;
+			net::ServerPacket pack;
+
+			if (players.size() > 0)
+				pack.players = players;
+			if (projectiles.size() > 0)
+				pack.projectiles = projectiles;
+			if (enemies.size() > 0)
+				pack.enemies = enemies;
+			if (items.size() > 0)
+				pack.items = items;
+			if (walls.size() > 0)
+				pack.walls = walls;
+
+			//std::cout << "[INFO] client size : " << clients.size() << std::endl;
+			std::cout << "[INFO] player size : " << players.size() << std::endl;
+			std::cout << "[INFO] projectile size : " << projectiles.size() << std::endl;
+			std::cout << "[INFO] enemy size : " << enemies.size() << std::endl;
+			std::cout << "[INFO] wall size : " << walls.size() << std::endl;
+			std::cout << "[INFO] item size : " << items.size() << std::endl;
+
+
+			std::ostream oss(&buf);
+
+			pack.save(oss);
+			boost::asio::streambuf::const_buffers_type bufs = buf.data();
+			std::string str(boost::asio::buffers_begin(bufs),
+				boost::asio::buffers_begin(bufs) + bufs.size());
+			message_ = str;//"response...";
+			//m_response += "\r\n";
+			socket_.async_send_to(
+				boost::asio::buffer(message_), endpoint_,
+				boost::bind(&sender::handle_send_to, this,
+					boost::asio::placeholders::error));
+		}
+	}
+
+private:
+	boost::asio::ip::udp::endpoint endpoint_;
+	boost::asio::ip::udp::socket socket_;
+	boost::asio::deadline_timer timer_;
+	int message_count_;
+	std::string message_;
+};
+
 
 class Service
 {
@@ -47,25 +395,730 @@ public:
 
 	}
 
-	void StartHandling()
+	void readHandling()
 	{
-		std::cout << "handling1 " << clients.size() << std::endl;
 		boost::asio::async_read(*m_sock.get(),
 			m_request,
 			boost::asio::transfer_at_least(1),
 			[this](const boost::system::error_code& ec,
 				std::size_t bytes_transferred)
 			{
-				onRequestReceived(ec, bytes_transferred);
+				if (!ec)
+					onRequestReceived(ec, bytes_transferred);
+				else
+					std::cout << "readHandling error" << std::endl;
 			}
 		);
 
+		/*std::cout << "res " << m_response << std::endl;
+		if (m_response.size())
+		{
+			StartHandling2();
+		}*/
+
 	}
 
-	void StartHandling2()
+	void writeHandling()
 	{
-		std::cout << "handling2 - " << clients.size() << " - " << players.size() << std::endl;
+		//// update objects
+		//// items
+		//for (int i = 0; i < items.size(); i++)
+		//{
+		//	// players - item collision
+		//	for (int j = 0; j < players.size(); j++)
+		//	{
+		//		if (net::detectCollision(players[j], items[i]))
+		//		{
+		//			if (items[i].inShop == false)
+		//			{
+		//				if (items[i].type == COIN)
+		//				{
+		//					players[j].score += 20;
+		//				}
+		//				else if (items[i].type == POWERUP)
+		//				{
 
+		//					if (players[j].powerUpLevel < players[j].maxPowerUpLevel)
+		//					{
+
+		//						players[j].powerUpLevel++;
+		//					}
+		//				}
+		//				items[i].isAlive = false;
+		//			}
+		//			else // shopitem
+		//			{
+		//				if (players[j].score >= items[i].cost && players[j].powerUpLevel < 5)
+		//				{
+		//					int num = players[j].score / items[i].cost;
+
+		//					if (players[j].powerUpLevel + num >= 5)
+		//					{
+		//						num = 5 - players[j].powerUpLevel;
+		//						players[j].powerUpLevel = 5;
+		//					}
+		//					else
+		//					{
+		//						players[j].powerUpLevel += num;
+		//					}
+		//					players[j].score -= items[i].cost * num;
+
+		//				}
+		//			}
+		//		}
+		//	}
+
+		//	if (items[i].isAlive == false)
+		//	{
+		//		items.erase(items.begin() + i);
+		//	}
+		//}
+
+		//// walls
+		//for (int i = 0; i < walls.size(); i++)
+		//{
+
+		//	// enemy - wall collision
+		//	for (int j = 0; j < enemies.size(); j++)
+		//	{
+		//		if (net::detectCollision(enemies[j], walls[i]))
+		//		{
+		//			if (enemies[j].direction == 1)
+		//			{
+		//				enemies[j].canMoveUp = false;
+		//				enemies[j].direction = net::generateRandom(4);
+		//				enemies[j].temp_y += enemies[j].velocity;
+		//			}
+		//			else if (enemies[j].direction == 2)
+		//			{
+		//				enemies[j].canMoveDown = false;
+
+		//				enemies[j].direction = net::generateRandom(4);
+		//				enemies[j].temp_y -= enemies[j].velocity;
+		//			}
+		//			else if (enemies[j].direction == 3)
+		//			{
+		//				enemies[j].canMoveLeft = false;
+		//				enemies[j].direction = net::generateRandom(4);
+		//				enemies[j].temp_x += enemies[j].velocity;
+		//			}
+		//			else if (enemies[j].direction == 4)
+		//			{
+		//				enemies[j].canMoveRight = false;
+		//				enemies[j].direction = net::generateRandom(4);
+		//				enemies[j].temp_x -= enemies[j].velocity;
+		//			}
+		//		}
+		//	}
+
+		//	// projectile - wall collision
+		//	for (int j = 0; j < projectiles.size(); j++)
+		//	{
+		//		if (net::detectCollision(walls[i], projectiles[j]))
+		//		{
+
+
+		//			projectiles[j].isAlive = false;
+		//			if (walls[i].destructible == true)
+		//			{
+		//				walls[i].hp -= projectiles[j].attackDamage;
+		//			}
+
+		//			if (walls[i].hp <= 0)
+		//			{
+		//				walls[i].isAlive = false;
+		//			}
+		//		}
+		//	}
+
+		//	if (walls[i].isAlive == false)
+		//	{
+		//		walls.erase(walls.begin() + i);
+		//	}
+		//}
+
+		//// projectile
+		//for (int i = 0; i < projectiles.size(); i++)
+		//{
+		//	projectiles[i].update();
+
+		//	// projectile - enemy collision
+		//	for (int j = 0; j < enemies.size(); j++)
+		//	{
+		//		if (net::detectCollision(enemies[j], projectiles[i]))
+		//		{
+		//			projectiles[i].isAlive = false;
+		//			enemies[j].aggroedBy = projectiles[i].id;
+		//			enemies[j].hp -= projectiles[i].attackDamage;
+
+		//			if (enemies[j].hp <= 0)
+		//			{
+		//				enemies[j].isAlive = false;
+		//				enemies[j].aggroedBy = 0;
+		//			}
+		//		}
+		//	}
+
+		//	//// projectile - players collision
+		//	//for (int j = 0; j < players.size(); j++)
+		//	//{
+		//	//	if (net::detectCollision(projectiles[i], players[j]))
+		//	//	{
+		//	//		projectiles[i].isAlive = false;
+		//	//		players[j].hp -= projectiles[i].attackDamage;
+
+		//	//		if (players[j].hp <= 0)
+		//	//		{
+		//	//			players[j].isAlive = false;
+		//	//		}
+		//	//	}
+		//	//}
+
+
+
+		//	if (projectiles[i].isAlive == false)
+		//	{
+		//		projectiles.erase(projectiles.begin() + i);
+		//	}
+		//}
+
+		//// enemyMonster
+		//for (int i = 0; i < enemies.size(); i++)
+		//{
+		//	enemies[i].update();
+
+		//	// enemyMonster - player collision
+		//	for (int j = 0; j < players.size(); j++)
+		//	{
+		//		if (abs(players[j].collisionRect_y - enemies[i].collisionRect_y) <= 100 &&
+		//			abs(players[j].collisionRect_x - enemies[i].collisionRect_x) <= 100)
+		//		{
+		//			enemies[i].aggroedBy = players[j].id;
+		//		}
+		//		else
+		//		{
+		//			enemies[i].aggroedBy = 0;
+		//		}
+
+		//		if (net::detectCollision(players[j], enemies[i]))
+		//		{
+		//			players[j].hp -= enemies[i].attackDamage;
+
+		//			if (players[j].hp < 0)
+		//				players[j].hp = 0;
+
+		//			if (players[j].powerUpLevel > 1)
+		//			{
+		//				players[j].powerUpLevel--;
+		//			}
+
+
+		//		}
+		//	}
+
+		//	// AI
+		//	for (int j = 0; j < players.size(); j++)
+		//	{
+
+		//		if (enemies[i].aggroedBy == players[j].id)
+		//		{
+		//			if (players[j].collisionRect_x < enemies[i].collisionRect_x &&
+		//				players[j].collisionRect_y - enemies[i].collisionRect_y <= 40)
+		//			{
+		//				enemies[i].direction = 3;
+		//			}
+		//			if (players[j].collisionRect_x > enemies[i].collisionRect_x &&
+		//				players[j].collisionRect_y - enemies[i].collisionRect_y <= 40)
+		//			{
+		//				enemies[i].direction = 4;
+		//			}
+		//			if (players[j].collisionRect_y < enemies[i].collisionRect_y &&
+		//				players[j].collisionRect_x - enemies[i].collisionRect_x <= 40)
+		//			{
+		//				enemies[i].direction = 1;
+		//			}
+		//			if (players[j].collisionRect_y > enemies[i].collisionRect_y &&
+		//				players[j].collisionRect_x - enemies[i].collisionRect_x <= 80)
+		//			{
+		//				enemies[i].direction = 2;
+		//			}
+		//		}
+		//	}
+
+
+
+
+		//	if (enemies[i].isAlive == false)
+		//	{
+		//		// generate item           
+		//		item.isAlive = true;
+		//		int random = net::generateRandom(2);
+
+		//		if (random == 1)
+		//		{
+		//			item.collisionRect_x = enemies[i].collisionRect_x;
+		//			item.collisionRect_y = enemies[i].collisionRect_y;
+		//			item.type = COIN;
+		//			item.scaleValue = item.type == COIN ? 0.2 : 0.4;
+		//			item.id = item_id++;
+		//			items.push_back(item);
+		//		}
+		//		else if (random == 2)
+		//		{
+		//			item.collisionRect_x = enemies[i].collisionRect_x;
+		//			item.collisionRect_y = enemies[i].collisionRect_y;
+		//			item.type = POWERUP;
+		//			item.scaleValue = item.type == COIN ? 0.2 : 0.4;
+		//			item.id = item_id++;
+		//			items.push_back(item);
+		//		}
+		//		enemies.erase(enemies.begin() + i);
+		//	}
+		//}
+
+
+		boost::asio::streambuf buf;
+		net::ServerPacket pack;
+
+		if (players.size() > 0)
+			pack.players = players;
+		if (projectiles.size() > 0)
+			pack.projectiles = projectiles;
+		if (enemies.size() > 0)
+			pack.enemies = enemies;
+		if (items.size() > 0)
+			pack.items = items;
+		if (walls.size() > 0)
+			pack.walls = walls;
+
+		//std::cout << "[INFO] client size : " << clients.size() << std::endl;
+		std::cout << "[INFO] player size : " << players.size() << std::endl;
+		std::cout << "[INFO] projectile size : " << projectiles.size() << std::endl;
+		std::cout << "[INFO] enemy size : " << enemies.size() << std::endl;
+		std::cout << "[INFO] wall size : " << walls.size() << std::endl;
+		std::cout << "[INFO] item size : " << items.size() << std::endl;
+
+
+
+		std::ostream oss(&buf);
+
+		pack.save(oss);
+		boost::asio::streambuf::const_buffers_type bufs = buf.data();
+		std::string str(boost::asio::buffers_begin(bufs),
+			boost::asio::buffers_begin(bufs) + bufs.size());
+		m_response = str;//"response...";
+		m_response += "\r\n";
+
+		for (int i = 0; i < clients.size(); i++)
+		{
+			std::shared_ptr<boost::asio::ip::tcp::socket> client = clients[i];
+			if (client != nullptr)
+			{
+				//std::cout << "client : " << client->remote_endpoint() << std::endl;
+				boost::asio::async_write(*client.get(),
+					boost::asio::buffer(m_response),
+					[this, client](const boost::system::error_code& ec,
+						std::size_t bytes_transferred)
+					{
+
+						if (ec)
+						{
+							std::cout << "async_write Error : " << ec.message() << std::endl;
+						}
+						else
+						{
+							try
+							{
+								//std::cout << "Sent : " << bytes_transferred << std::endl;
+
+								if (clients.size() > 2)
+								{
+									for (std::vector<std::shared_ptr<boost::asio::ip::tcp::socket>>::iterator iter = clients.begin(); iter != clients.end(); ++iter)
+									{
+										if (client != nullptr)
+										{
+											if (*iter == client)
+											{
+												iter = clients.erase(iter);
+												break;
+											}
+										}
+									}
+									onResponseSent(ec, bytes_transferred);
+								}
+							}
+							catch (const std::exception& e)
+							{
+
+							}
+						}
+
+					});
+			}
+		}
+
+	}
+private:
+	void onRequestReceived(const boost::system::error_code& ec,
+		std::size_t bytes_transferred)
+	{
+		if (ec)
+		{
+			std::cout << "onRequestReceived Error : " << ec.message() << std::endl;
+
+			onFinish();
+			return;
+		}
+
+
+		m_response = ProcessRequest(m_request);
+
+		if (m_response == "connected")
+		{
+
+			boost::asio::streambuf buf;
+			net::ServerPacket pack;
+			pack.id = id;
+
+
+			std::ostream oss(&buf);
+
+			pack.save(oss);
+			boost::asio::streambuf::const_buffers_type bufs = buf.data();
+			std::string str(boost::asio::buffers_begin(bufs),
+				boost::asio::buffers_begin(bufs) + bufs.size());
+			m_response = str;//"response...";		
+			//std::cout << "connected" << std::endl;
+			//m_response = std::to_string(id);
+			m_response += "\r\n";
+
+
+			boost::asio::async_write(*m_sock.get(),
+				boost::asio::buffer(m_response),
+				[this](const boost::system::error_code& ec,
+					std::size_t bytes_transferred)
+				{
+					if (ec)
+					{
+						std::cout << "Error..." << std::endl;
+					}
+					else
+					{
+						std::cout << "Sent" << std::endl;
+						net::Player newPlayer = net::Player();
+						newPlayer.id = id++;
+						newPlayer.isAlive = true;
+						newPlayer.port = m_sock->remote_endpoint().port();
+
+						if (players.size() == 0)
+							players.push_back(newPlayer);
+						else
+						{
+
+							try
+							{
+								bool found = false;
+								for (int i = 0; i < players.size(); i++)
+								{
+									players.at(i);
+
+									if (newPlayer.id == players[i].id)
+									{
+										found = true;
+
+									}
+								}
+								if (found == false)
+									players.push_back(newPlayer);
+							}
+							catch (int e)
+							{
+
+							}
+						}
+						onResponseSent(ec, bytes_transferred);
+					}
+				});
+		}
+		else if (m_response == "ping")
+		{
+			//writeHandling();
+		}
+
+		else if (m_response == "notconnected")
+		{
+			boost::asio::streambuf buf;
+			net::ServerPacket pack;
+			pack.id = 0;
+
+
+			std::ostream oss(&buf);
+
+			pack.save(oss);
+			boost::asio::streambuf::const_buffers_type bufs = buf.data();
+			std::string str(boost::asio::buffers_begin(bufs),
+				boost::asio::buffers_begin(bufs) + bufs.size());
+			m_response = str;//"response...";		
+			//std::cout << "connected" << std::endl;
+			//m_response = std::to_string(id);
+			m_response += "\r\n";
+
+
+			boost::asio::async_write(*m_sock.get(),
+				boost::asio::buffer(m_response),
+				[this](const boost::system::error_code& ec,
+					std::size_t bytes_transferred)
+				{
+					if (ec)
+					{
+						std::cout << "Error..." << std::endl;
+					}
+					else
+					{
+						std::cout << "Sent" << std::endl;
+					}
+				}
+			);
+		}
+
+	}
+
+	void onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred)
+	{
+
+		if (ec)
+		{
+			std::cout << "onResponseSent error: " << ec.message() << std::endl;
+		}
+
+		onFinish();
+	}
+
+	void onFinish()
+	{
+		//delete this;
+	}
+
+	std::string ProcessRequest(boost::asio::streambuf& request)
+	{
+		// do something
+
+		boost::asio::streambuf::const_buffers_type bufs = request.data();
+		std::string str(boost::asio::buffers_begin(bufs),
+			boost::asio::buffers_begin(bufs) + bufs.size());
+		std::cout << "[CLIENT REQUEST] Request : " << str << std::endl;
+		std::string response;
+		if (str == "connect")
+		{
+			response = "connected";
+			//std::cout << response << std::endl;
+		}
+		else if (str.find("id_") != std::string::npos)
+		{
+			response = "ping";
+			//std::cout << "Response :: " << response << std::endl;
+
+			size_t i = 0;
+			for (; i < str.length(); i++) { if (isdigit(str[i])) break; }
+
+			// remove the first chars, which aren't digits
+			str = str.substr(i, str.length() - i);
+
+			// convert the remaining text to an integer
+			int id = atoi(str.c_str());
+
+			std::cout << "[INFO] connectino with player - " << id << " alive" << std::endl;
+
+			for (int i = 0; i < players.size(); i++)
+			{
+				if (players[i].id == id)
+				{
+					players[i].isConnected = true;
+					players[i].connectCounter = 1;
+				}
+			}
+			std::cout << m_sock->remote_endpoint().port() << std::endl;
+		}
+		else // process user data // process key input
+		{
+			try
+			{
+				std::string delimiter = ";";
+
+				size_t pos = 0;
+				std::string token;
+				std::string id;
+				std::string pw;
+				while ((pos = str.find(delimiter)) != std::string::npos)
+				{
+					id = str.substr(0, pos);
+					std::cout << token << std::endl;
+					str.erase(0, pos + delimiter.length());
+				}
+				pw = str;
+				std::cout << id << " : " << pw << std::endl;
+				std::string query = "SELECT * FROM user_db WHERE id='" + id + "' and pw='" + pw + "';";
+
+				sql::Driver* driver;
+				sql::Connection* con;
+				sql::PreparedStatement* pstmt;
+				sql::ResultSet* result;
+				bool found = false;
+
+				/* Create a connection */
+				driver = get_driver_instance();
+				con = driver->connect("tcp://127.0.0.1:3306", "root", "root");
+				/* Connect to the MySQL test database */
+				con->setSchema("userdb");
+
+				pstmt = con->prepareStatement(query);//"SELECT * FROM user_db WHERE id='test' and pw='9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08';");
+				result = pstmt->executeQuery();
+
+				found = result->last() ? true : false;
+
+				delete result;
+				delete pstmt;
+				delete con;
+
+				std::cout << found << std::endl;
+				response = found ? "connected" : "notconnected";
+			}
+			catch (sql::SQLException& e)
+			{
+				std::cout << "# ERR: SQLException in " << __FILE__;
+				std::cout << "(" << __FUNCTION__ << ") on line "
+					<< __LINE__ << std::endl;
+				std::cout << "# ERR: " << e.what();
+				std::cout << " (MySQL error code: " << e.getErrorCode();
+				std::cout << ", SQLState: " << e.getSQLState() <<
+					" )" << std::endl;
+			}
+
+
+		}
+
+		return response;
+	}
+
+private:
+	std::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
+	std::string m_response;
+
+	boost::asio::streambuf m_request;
+};
+
+class Acceptor
+{
+public:
+	Acceptor(boost::asio::io_context& io, unsigned short port_num) :
+		m_io(io),
+		m_acceptor(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::any(), port_num)),
+		m_isStopped(false)
+	{
+
+	}
+
+	void Start()
+	{
+		m_acceptor.listen();
+		InitAccept();
+
+	}
+
+	void Stop()
+	{
+		m_isStopped.store(true);
+	}
+
+private:
+	void InitAccept()
+	{
+		std::shared_ptr<boost::asio::ip::tcp::socket> sock(new boost::asio::ip::tcp::socket(m_io));
+		m_acceptor.async_accept(*sock.get(),
+			[this, sock](const boost::system::error_code& error)
+			{
+				if (error)
+				{
+					std::cout << "[REQUEST] " << error.message() << std::endl;
+				}
+				else
+				{
+					std::cout << " accepted " << std::endl;
+					//boost::asio::socket_base::keep_alive option(true);
+					/*boost::asio::ip::tcp::no_delay option(true);
+					sock->set_option(option);*/
+					clients.push_back(sock);
+
+					onAccept(error, sock);
+				}
+			});
+	}
+
+	void onAccept(const boost::system::error_code& ec, std::shared_ptr<boost::asio::ip::tcp::socket> sock)
+	{
+		if (ec)
+		{
+			std::cout << "onAccept Error : " << ec.message() << std::endl;
+		}
+		else
+		{
+
+			(new Service(sock))->readHandling();
+
+			//(new Service(sock))->StartHandling2(); // tcp game world send
+
+			if (!m_isStopped.load())
+			{
+				InitAccept();
+			}
+
+		}
+	}
+private:
+	boost::asio::io_context& m_io;
+
+	boost::asio::ip::tcp::acceptor m_acceptor;
+	std::atomic<bool> m_isStopped;
+};
+
+class Server
+{
+public:
+	Server()
+	{
+		m_work.reset(new boost::asio::io_context::work(m_io));
+	}
+
+	void Start(unsigned short port_num, unsigned int thread_pool_size)
+	{
+		assert(thread_pool_size > 0);
+
+		acc.reset(new Acceptor(m_io, port_num));
+		acc->Start();
+
+		for (std::size_t i = 0; i < thread_pool_size - 1; i++)
+		{
+			std::unique_ptr<std::thread> th(new std::thread([this]()
+				{
+					m_io.run();
+				}));
+			m_thread_pool.push_back(std::move(th));
+		}
+	}
+
+	void StartUDP(unsigned short port_num)
+	{
+		std::unique_ptr<std::thread> th(new std::thread([this]()
+			{
+				sender s(m_io_udp, boost::asio::ip::address::from_string("239.255.0.1"));
+
+				m_io_udp.run();
+			}));
+		m_thread_pool.push_back(std::move(th));
+	}
+
+	void Update()
+	{
 		// update objects
 		// items
 		for (int i = 0; i < items.size(); i++)
@@ -75,7 +1128,6 @@ public:
 			{
 				if (net::detectCollision(players[j], items[i]))
 				{
-					std::cout << "<<<<<<<<<<<<< powerup " << items[i].type << std::endl;
 					if (items[i].inShop == false)
 					{
 						if (items[i].type == COIN)
@@ -161,14 +1213,11 @@ public:
 			// projectile - wall collision
 			for (int j = 0; j < projectiles.size(); j++)
 			{
-				//std::cout << "wall-> " << walls[i].collisionRect_x << " , " << projectiles[j].collisionRect_x + projectiles[j].width << std::endl; // ", " << walls[i].collisionRect_y << std::endl;
-				//std::cout << "projectile-> " << walls[i].collisionRect_x + walls[i].width << " , " << projectiles[j].collisionRect_x << std::endl;// << ", " << projectiles[j].collisionRect_y << std::endl;
 				if (net::detectCollision(walls[i], projectiles[j]))
 				{
-
+					std::cout << "collision!!!!!!!" << std::endl;
 
 					projectiles[j].isAlive = false;
-					std::cout << " xxxxxxxxx projectile state ------> : " << projectiles[j].isAlive << std::endl;
 					if (walls[i].destructible == true)
 					{
 						walls[i].hp -= projectiles[j].attackDamage;
@@ -188,10 +1237,8 @@ public:
 		}
 
 		// projectile
-		// std::cout << "projectile size : " << projectiles.size() << std::endl;
 		for (int i = 0; i < projectiles.size(); i++)
 		{
-			//			std::cout << projectiles[i].collisionRect_x << " : " << projectiles[i].collisionRect_y << std::endl;
 			projectiles[i].update();
 
 			// projectile - enemy collision
@@ -238,7 +1285,6 @@ public:
 		for (int i = 0; i < enemies.size(); i++)
 		{
 			enemies[i].update();
-			//std::cout << "enem up ---->: " << enemies[i].direction << " --: " << enemies[i].collisionRect_x << " : " << enemies[i].collisionRect_y << std::endl;
 
 			// enemyMonster - player collision
 			for (int j = 0; j < players.size(); j++)
@@ -257,10 +1303,15 @@ public:
 				{
 					players[j].hp -= enemies[i].attackDamage;
 
+					if (players[j].hp < 0)
+						players[j].hp = 0;
+
 					if (players[j].powerUpLevel > 1)
 					{
 						players[j].powerUpLevel--;
 					}
+
+
 				}
 			}
 
@@ -304,7 +1355,6 @@ public:
 
 				if (random == 1)
 				{
-					std::cout << ">>>>>>>>>>>>> item created ???????" << std::endl;
 					item.collisionRect_x = enemies[i].collisionRect_x;
 					item.collisionRect_y = enemies[i].collisionRect_y;
 					item.type = COIN;
@@ -326,461 +1376,14 @@ public:
 		}
 
 
-		boost::asio::streambuf buf;
-		net::ServerPacket pack;
 
-		if (players.size() > 0)
-			pack.players = players;
-		if (projectiles.size() > 0)
-			pack.projectiles = projectiles;
-		if (enemies.size() > 0)
-			pack.enemies = enemies;
-		if (items.size() > 0)
-			pack.items = items;
-		if (walls.size() > 0)
-			pack.walls = walls;
+		//std::cout << "[INFO] client size : " << clients.size() << std::endl;
+		std::cout << "[INFO] player size : " << players.size() << std::endl;
+		std::cout << "[INFO] projectile size : " << projectiles.size() << std::endl;
+		std::cout << "[INFO] enemy size : " << enemies.size() << std::endl;
+		std::cout << "[INFO] wall size : " << walls.size() << std::endl;
+		std::cout << "[INFO] item size : " << items.size() << std::endl;
 
-		std::cout << "player size : " << players.size() << std::endl;
-		std::cout << "enemy size : " << enemies.size() << std::endl;
-		std::cout << "wall size : " << walls.size() << std::endl;
-		std::cout << "item size : " << items.size() << std::endl;
-		//std::cout << pack.players[0].collisionRect_x << ":" << pack.players[0].collisionRect_y << std::endl;
-		/*net::Projectile pj;
-		pj.id = 4;
-		pack.projectiles.push_back(pj);*/
-
-		std::ostream oss(&buf);
-
-		pack.save(oss);
-		boost::asio::streambuf::const_buffers_type bufs = buf.data();
-		std::string str(boost::asio::buffers_begin(bufs),
-			boost::asio::buffers_begin(bufs) + bufs.size());
-		m_response = str;//"response...";
-		m_response += "\r\n";
-		std::cout << "asdfadsfsafdasfdfasd " << str.size() << std::endl;
-		//m_response = "1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-		for (int i = 0; i < clients.size(); i++)
-		{
-			std::shared_ptr<boost::asio::ip::tcp::socket> client = clients[i];
-			//std::cout << " ----- > " << clients.size() << std::endl;
-			boost::asio::async_write(*client.get(),
-				boost::asio::buffer(m_response),
-				[this, client](const boost::system::error_code& ec,
-					std::size_t bytes_transferred)
-				{
-
-					if (ec)
-					{
-						std::cout << "async_write Error : " << ec.message() << std::endl;
-						//if ()
-					}
-					else
-					{
-						try
-						{
-							std::cout << "Sent : " << bytes_transferred << std::endl;
-
-							//clients.erase(std::remove(clients.begin(), clients.end(), client), clients.end());
-							if (clients.size() > 2)
-							{
-								for (std::vector<std::shared_ptr<boost::asio::ip::tcp::socket>>::iterator iter = clients.begin(); iter != clients.end(); ++iter)
-								{
-									if (*iter == client)
-									{
-										clients.erase(iter);
-										break;
-									}
-								}
-								onResponseSent(ec, bytes_transferred);
-							}
-						}
-						catch (const std::exception& e)
-						{
-
-						}
-					}
-
-				});
-		}
-
-	}
-private:
-	void onRequestReceived(const boost::system::error_code& ec,
-		std::size_t bytes_transferred)
-	{
-		if (ec)
-		{
-			std::cout << "onRequestReceived Error : " << ec.message() << std::endl;
-
-			//			if (boost::asio::error::connection_reset == ec)
-			//			{
-			//				for (int i = 0; i < players.size(); i++)
-			//				{
-			//					//std::cout << clients[i]->remote_endpoint().port() << std::endl;
-			//					//std::cout << players[0].port << std::endl;
-			//					if (players[i].port == m_sock->remote_endpoint().port())
-			//					{
-			//						std::cout << ">>>>>>>> deleted >>>>>>>" << std::endl;
-			//						players.erase(players.begin() + i);
-			//					}
-			//				}
-			//				m_sock->close();
-			//
-			//				clients.erase(std::remove(clients.begin(), clients.end(), m_sock), clients.end());
-			//			}
-			//			//m_sock->close();
-			//		
-			////			clients.erase(std::remove(clients.begin(), clients.end(), m_sock), clients.end());
-			//			
-			//			//for (int i = 0; i < players.size(); i++)
-			//			//{
-			//			////	
-			//			//	if (players[i].port == )
-			//			//	{
-			//			////		std::cout << "player deleted" << std::endl;
-			//			////		//players.erase(players.begin() + i);
-			//			////		
-			//			//	}
-			//			//}
-			onFinish();
-			return;
-		}
-
-		m_response = ProcessRequest(m_request);
-
-		if (m_response == "connected")
-		{
-			m_response = std::to_string(id);
-			m_response += "\r\n";
-
-			//boost::asio::streambuf buf;
-			//net::LoginPacket pack;
-			//pack.id = 11	;
-
-			//std::ostream oss(&buf);
-			//pack.save(oss);
-			//boost::asio::streambuf::const_buffers_type bufs = buf.data();
-			//std::string str(boost::asio::buffers_begin(bufs),
-			//	boost::asio::buffers_begin(bufs) + bufs.size());
-			//m_response = str;//"response...";
-
-			net::Player newPlayer = net::Player();
-			newPlayer.id = id++;
-			newPlayer.isAlive = true;
-			newPlayer.port = m_sock->remote_endpoint().port();
-
-			if (players.size() == 0)
-				players.push_back(newPlayer);
-
-			for (int i = 0; i < players.size(); i++)
-			{
-				bool found = false;
-				if (newPlayer.id == players[i].id)
-				{
-					found = true;
-
-				}
-				if (found == false)
-					players.push_back(newPlayer);
-			}
-
-
-
-			boost::asio::async_write(*m_sock.get(),
-				boost::asio::buffer(m_response),
-				[this](const boost::system::error_code& ec,
-					std::size_t bytes_transferred)
-				{
-					if (ec)
-					{
-						std::cout << "ERror..." << std::endl;
-					}
-					else
-					{
-						std::cout << "Sent" << std::endl;
-						onResponseSent(ec, bytes_transferred);
-					}
-				});
-		}
-		else
-		{
-
-		}
-
-	}
-
-	void onResponseSent(const boost::system::error_code& ec, std::size_t bytes_transferred)
-	{
-
-		if (ec)
-		{
-			std::cout << "onResponseSent error: " << ec.message() << std::endl;
-		}
-
-		onFinish();
-	}
-
-	void onFinish()
-	{
-		//delete this;
-	}
-
-	std::string ProcessRequest(boost::asio::streambuf& request)
-	{
-		// do something
-
-		boost::asio::streambuf::const_buffers_type bufs = request.data();
-		std::string str(boost::asio::buffers_begin(bufs),
-			boost::asio::buffers_begin(bufs) + bufs.size());
-		std::cout << "Request : " << str << std::endl;
-		std::string response;
-		if (str == "connect")
-		{
-			response = "connected";
-			std::cout << response << std::endl;
-		}
-		else if (str.find("id_") != std::string::npos)
-		{
-			response = "ping";
-			std::cout << "Response :: " << response << std::endl;
-
-			size_t i = 0;
-			for (; i < str.length(); i++) { if (isdigit(str[i])) break; }
-
-			// remove the first chars, which aren't digits
-			str = str.substr(i, str.length() - i);
-
-			// convert the remaining text to an integer
-			int id = atoi(str.c_str());
-
-			std::cout << "id :: " << id << std::endl;
-
-			for (int i = 0; i < players.size(); i++)
-			{
-				std::cout << "gogo" << std::endl;
-
-				if (players[i].id == id)
-				{
-					players[i].isConnected = true;
-					players[i].connectCounter = 1;
-					std::cout << "CONNECTEDAAAAAA " << players[i].isConnected << std::endl;
-				}
-			}
-			std::cout << m_sock->remote_endpoint().port() << std::endl;
-		}
-		else // process key input
-		{
-			net::ClientPacket p;
-			p.load(str);
-			std::cout << "Request2 : " << p.key << " " << p.player_id << std::endl;
-
-			if (p.key >= 1 && p.key <= 4)
-			{
-				for (int i = 0; i < players.size(); i++)
-				{
-					if (p.player_id == players[i].id)
-					{
-						players[i].direction = p.key;
-						//std::cout << players[i].collisionRect_x << ":" << players[i].collisionRect_y << std::endl;
-						players[i].update();
-						// players - wall collision
-						for (int j = 0; j < walls.size(); j++)
-						{
-							if (net::detectCollision(players[i], walls[j]))
-							{
-								std::cout << "alksdfjlasdkfjklasfjklafjkja collision " << std::endl;
-								if (players[i].direction == 1)
-								{
-									players[i].canMoveUp = false;
-									players[i].temp_y += players[i].velocity;
-								}
-								else if (players[i].direction == 2)
-								{
-									players[i].canMoveDown = false;
-									players[i].temp_y -= players[i].velocity;
-								}
-								else if (players[i].direction == 3)
-								{
-									players[i].canMoveLeft = false;
-									players[i].temp_x += players[i].velocity;
-								}
-								else if (players[i].direction == 4)
-								{
-									players[i].canMoveRight = false;
-									players[i].temp_x -= players[i].velocity;
-								}
-							}
-						}
-						break;
-						//std::cout << players[i].collisionRect_x << ":" << players[i].collisionRect_y << std::endl;
-					}
-				}
-			}
-			else if (p.key == 5)
-			{
-
-				int random = net::generateRandom(30);
-				projectile.id = p.player_id;
-				projectile.isAlive = true;
-				int counter = 0;
-
-				for (int i = 0; i < players.size(); i++)
-				{
-					if (p.player_id == players[i].id)
-					{
-						projectile.direction = players[i].direction;
-						projectile.temp_projectile_x = projectile.collisionRect_x = players[i].collisionRect_x;
-						projectile.temp_projectile_y = projectile.collisionRect_y = players[i].collisionRect_y;
-
-
-						while (counter < players[i].powerUpLevel)
-						{
-							projectile.temp_projectile_x = projectile.collisionRect_x += counter * random;
-							projectile.temp_projectile_y = projectile.collisionRect_y += counter * random;
-							counter++;
-							projectile.id = projectile_id++;
-							projectiles.push_back(projectile);
-						}
-
-
-						projectile.isAlive = false;
-						break;
-					}
-				}
-			}
-
-			response = str;
-		}
-		/*PlayerData p;
-		p.load(str);
-		std::cout << "Request2 : " << p.a[2] << " " <<  std::endl;*/
-
-		return response;
-	}
-
-private:
-	std::shared_ptr<boost::asio::ip::tcp::socket> m_sock;
-	std::string m_response;
-
-	boost::asio::streambuf m_request;
-};
-
-class Acceptor
-{
-public:
-	Acceptor(boost::asio::io_context& io, unsigned short port_num) :
-		m_io(io),
-		m_acceptor(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::any(), port_num)),
-		m_isStopped(false)
-	{
-
-	}
-
-	void Start()
-	{
-		m_acceptor.listen();
-		InitAccept();
-
-	}
-
-	void Stop()
-	{
-		m_isStopped.store(true);
-	}
-
-private:
-	void InitAccept()
-	{
-		std::shared_ptr<boost::asio::ip::tcp::socket> sock(new boost::asio::ip::tcp::socket(m_io));
-
-		m_acceptor.async_accept(*sock.get(),
-			[this, sock](const boost::system::error_code& error)
-			{
-				//boost::asio::socket_base::keep_alive option(true);
-				/*boost::asio::ip::tcp::no_delay option(true);
-				sock->set_option(option);*/
-				clients.push_back(sock);
-				onAccept(error, sock);
-			});
-	}
-
-	void onAccept(const boost::system::error_code& ec, std::shared_ptr<boost::asio::ip::tcp::socket> sock)
-	{
-		if (ec)
-		{
-			std::cout << "onAccept Error : " << ec.message() << std::endl;
-		}
-		else
-		{
-
-			(new Service(sock))->StartHandling();
-			(new Service(sock))->StartHandling2();
-
-			//// ping counter -> disconnect
-			//for (int i = 0; i < players.size(); i++)
-			//{
-			//	players[i].connectCounter++;
-
-			//	if (players[i].connectCounter++ > players[i].connectDelay)
-			//	{
-			//		players[i].connectCounter = 0;
-			//		
-			//		if (players[i].isConnected == false)
-			//		{
-			//			// disconnect
-			//			players.erase(players.begin() + i);
-			//			std::cout << i << " - disconnected <<" << std::endl;
-			//		}
-			//		
-			//	}
-			//}
-
-			//std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			if (!m_isStopped.load())
-			{
-				InitAccept();
-			}
-
-		}
-
-		//if (!m_isStopped.load())
-		//{
-		//	InitAccept();
-		//}
-		//else
-		//{
-		//	//m_acceptor.close();
-		//}
-	}
-private:
-	boost::asio::io_context& m_io;
-	boost::asio::ip::tcp::acceptor m_acceptor;
-	std::atomic<bool> m_isStopped;
-};
-
-class Server
-{
-public:
-	Server()
-	{
-		m_work.reset(new boost::asio::io_context::work(m_io));
-	}
-
-	void Start(unsigned short port_num, unsigned int thread_pool_size)
-	{
-		assert(thread_pool_size > 0);
-
-		acc.reset(new Acceptor(m_io, port_num));
-		acc->Start();
-
-		for (std::size_t i = 0; i < thread_pool_size; i++)
-		{
-			std::unique_ptr<std::thread> th(new std::thread([this]()
-				{
-					m_io.run();
-				}));
-			m_thread_pool.push_back(std::move(th));
-		}
 	}
 
 	void Stop()
@@ -1000,15 +1603,18 @@ public:
 		enemy.isAlive = true;
 		enemy.maxHp = 100;
 		enemy.hp = 100;
+		enemy.isBoss = true;
 		enemy.attackDamage = 10;
 		enemy.temp_x = enemy.collisionRect_x = 50 * bossRoomSize / 2 + initialRoomX + (bossRoomSize * 50 * 2) + 100;
 		enemy.temp_y = enemy.collisionRect_y = (bossRoomSize / 2 * 50) + 50 + initialRoomY;
 		enemy.id = enemy_id++;
 		enemies.push_back(enemy);
+		enemy.isBoss = false;
 	}
 
 private:
 	boost::asio::io_context m_io;
+	boost::asio::io_context m_io_udp;
 	std::unique_ptr<boost::asio::io_context::work> m_work;
 	std::unique_ptr<Acceptor> acc;
 	std::vector<std::unique_ptr<std::thread>> m_thread_pool;
@@ -1025,13 +1631,14 @@ const unsigned int DEFAULT_THREAD_POOL_SIZE = 2;
 
 int main()
 {
-	unsigned short port_num = 5555;
+	unsigned short port_num = 5556;
+	unsigned short udp_port_num = 30001;
 
 	try
 	{
 		Server server;
 
-		unsigned int thread_pool_size = std::thread::hardware_concurrency() * 2;
+		unsigned int thread_pool_size = std::thread::hardware_concurrency();
 
 		if (thread_pool_size == 0)
 		{
@@ -1044,47 +1651,41 @@ int main()
 
 		server.Start(port_num, thread_pool_size);
 
+		//server.StartUDP(udp_port_num);
 		std::cout << "Server is running..." << std::endl;
-		while (true)
-		{
-			//std::cout << "run" << std::endl;
-			// ping counter -> disconnect
-			for (int i = 0; i < players.size(); i++)
-			{
-				if (players[i].connectCounter++ > players[i].connectDelay)
-				{
-					players[i].connectCounter = 1;
-
-					if (players[i].isConnected == false)
-					{
-						// disconnect
-						std::cout << players[i].id << " - disconnected <<" << std::endl;
-						players.erase(players.begin() + i);
-
-						break;
-					}
-
-					if (i < players.size() && players[i].connectCounter >= 1)
-					{
-						players[i].isConnected = false;
-					}
-
-
-
-
-				}
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(33));
-		}
+		//while (true)
 		//{
-		//	//std::cout << "Sending..." << clients.size() << std::endl;
-		//	for (int i = 0; i < clients.size(); i++)
+		//	server.Update();
+		//	// ping counter -> disconnect
+		//	for (int i = 0; i < players.size(); i++)
 		//	{
-		//		
-		//		(new Service(clients[i]))->StartHandling2();
+		//		if (players[i].connectCounter++ > players[i].connectDelay)
+		//		{
+		//			players[i].connectCounter = 1;
+
+		//			if (players[i].isConnected == false)
+		//			{
+		//				// disconnect
+		//				std::cout << "[INFO] " << players[i].id << " - disconnected <<" << std::endl;
+		//				players.erase(players.begin() + i);
+
+		//				break;
+		//			}
+
+		//			if (players[i].connectCounter >= 1)
+		//			{
+		//				players[i].isConnected = false;
+		//			}
+		//		}
 		//	}
+		//	/*for (int i = 0; i < clients.size(); i++)
+		//	{
+		//		std::cout << "handling2" << std::endl;
+		//		(new Service(clients[i]))->StartHandling2();
+		//	}*/
 		//	std::this_thread::sleep_for(std::chrono::milliseconds(33));
 		//}
+
 		std::this_thread::sleep_for(std::chrono::seconds(36000));
 
 		server.Stop();

@@ -48,7 +48,6 @@ ChatBox::~ChatBox(void)
 
 void ChatBox::update()
 {
-	//text.setString(buffer);
 	text.setString(s);
 }
 
@@ -60,31 +59,21 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 
 		if (event.text.unicode == 13)//enter
 		{
-			//onEnter(buffer);
-			//std::string a = s.toAnsiString();	
-			std::string newStr("안녕" + s);
 			std::wstring st(std::to_wstring(id) + L" : " + s.toWideString());
-			//std::wcout << "asdf " << st << std::endl;
-			//push(st);
 			
 			std::wcout << "asdf : " << st << std::endl;
-			//std::string newStr(s);// id + " : " + s.toAnsiString();
 			
 			client.WriteChatOperation(0, "127.0.0.1", 5557, net::handler, p_id, st, 2);
 			s.clear();
 		}
 
-		else if (code != '\b')
+		else if (code != '\b' && s.getSize() < 15)
 		{
-			s += event.text.unicode;//buffer.push_back(code);
-			//std::cout << "asdf : " << event.text.unicode << std::endl;
+			s += event.text.unicode;
 		}
 		else if (code == '\b')
 		{
-			/*if (buffer.size() > 0)
-				buffer.pop_back();*/
 			if (s.getSize() > 0) {
-				//std::cout << "문자열길이 : " << s.getSize() << std::endl;
 				s.erase(s.getSize() - 1); //마지막글자를 지운다.
 			}
 		}
@@ -102,53 +91,25 @@ void ChatBox::handleEvent(sf::Event& event, sf::RenderWindow& window, int id)
 				// The box has been selected
 				// Toggle the boolean
 			{
-				//std::cout << "[info] send clicked" << std::endl;
-				std::string newStr = std::to_string(id) + " : " + s.toAnsiString();
-				client.WriteOperation(0, "127.0.0.1", 5557, net::handler, p_id, newStr, 3);
+				std::wstring st(std::to_wstring(id) + L" : " + s.toWideString());
+
+				std::wcout << "asdf : " << st << std::endl;
+
+				client.WriteChatOperation(0, "127.0.0.1", 5557, net::handler, p_id, st, 2);
 				s.clear();
-				//isSelected = !isSelected;
-
-				//std::string newStr1 = inputBox1.s.toAnsiString();
-				//std::string newStr2 = inputBox2.s.toAnsiString();
-				//std::string newStr = newStr1 + ";" + sha256(newStr2);
-
-				//std::cout << newStr << std::endl; 
-
-				//client.WriteOperation(0, "127.0.0.1", 5556, net::handler, player_id, newStr, 2);
-				//std::this_thread::sleep_for(std::chrono::seconds(1));
-				//std::cout << net::id << std::endl;
-
-				//if (net::connected)
-				//{
-				//    client.WriteOperation(5, "127.0.0.1", 5555, net::handler, player_id, "", 0);
-				//    std::this_thread::sleep_for(std::chrono::seconds(3));
-				//}
-
-
-
 			}
 		}
 	}
-	//else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::BackSpace))
-	//{
-	//	if (s.getSize() > 0) {
-	//		//std::cout << "문자열길이 : " << s.getSize() << std::endl;
-	//		s.erase(s.getSize() - 1); //마지막글자를 지운다.
-	//	}
-	//}
 }
 
 void ChatBox::push(std::wstring& s)
 {
 	if (s.size() > 0)
 	{
-		/*USES_CONVERSION;
-		std::wstring message_w(A2W(s.c_str()));
-		sf::String b(message_w);*/
 		sf::String b(s);
 		
-		history.push_front(b);//s);
-		if (history.size() > historyLength)
+		history.push_front(b);
+		if (history.size() > historyLength - 3)
 			history.pop_back();
 	}
 }

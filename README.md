@@ -25,3 +25,4 @@ https://github.com/chanjook1m/2D_Roguelike_with_server.git
 ```
 2. Install boost dependencies (see above) with NuGet
 3. Install MYSQL Connector c++ and set MYSQL_ROOT as environment variable with its exe path
+4. Change resource path in GamePlay.cpp

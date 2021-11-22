@@ -16,9 +16,10 @@ public:
 	int spriteWidth = 0;
 	int spriteHeight = 0;	
 
+	bool isCollide = false;
 	bool isAlive = true;
 	//bool isDeleted = false;
-
+	int id;
 	int x = 0;
 	int y = 0;
 };

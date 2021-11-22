@@ -5,7 +5,7 @@
 class Player: public Entity
 {
 public:
-	int id = 1;
+	int id = 0;
 	int velocity = 2;	
 	float attackDamage = 1.0f;
 	int powerUpLevel = 1;
@@ -23,6 +23,8 @@ public:
 
 	int collisionRect_x = 300;
 	int collisionRect_y = 400;
+
+	int virtualKeyPressed = 0;
 	
 	bool updated = false;
 	bool isMainPlayer = false;

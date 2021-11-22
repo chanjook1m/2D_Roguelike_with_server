@@ -20,31 +20,31 @@ void Projectile::update()
 {
 	if (direction == 1)
 	{
-		//collisionRect.move(0, -velocity);
+		collisionRect.move(0, -velocity);
 	}
 
 	if (direction == 2 || direction == 0)
 	{
-		//collisionRect.move(0, velocity);
+		collisionRect.move(0, velocity);
 	}
 
 	if (direction == 3)
 	{
-		//collisionRect.move(-velocity, 0);
+		collisionRect.move(-velocity, 0);
 	}
 
 	if (direction == 4)
 	{
-		//collisionRect.move(velocity, 0);
+		collisionRect.move(velocity, 0);
 	}
 
-	lifetimeCounter++;
+	/*lifetimeCounter++;
 
 	if (lifetimeCounter >= lifetime)
 	{
 		lifetimeCounter = 0;
 		isAlive = false;
-	}
+	}*/
 	
 	sprite.setPosition(collisionRect.getPosition());
 }

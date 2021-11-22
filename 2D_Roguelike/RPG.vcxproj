@@ -89,7 +89,7 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -107,7 +107,7 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,7 +125,8 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,7 +144,8 @@
       <PreprocessorDefinitions>
       </PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\cereal\include;C:\Users\1z3r0\Desktop\game\2D_Roguelike\External\bitsery\include;$(SolutionDir)\client;$(SolutionDir)\External\SFML\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,14 +158,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="client\animatedGIF.cpp" />
+    <ClCompile Include="client\Chatbox.cpp" />
     <ClCompile Include="client\enemy.cpp" />
     <ClCompile Include="client\entity.cpp" />
+    <ClCompile Include="client\Game.cpp" />
+    <ClCompile Include="client\GamePlay.cpp" />
     <ClCompile Include="client\ingameText.cpp" />
+    <ClCompile Include="client\Inputbox.cpp" />
     <ClCompile Include="client\item.cpp" />
     <ClCompile Include="client\main.cpp" />
+    <ClCompile Include="client\MainMenu.cpp" />
     <ClCompile Include="client\player.cpp" />
     <ClCompile Include="client\projectile.cpp" />
     <ClCompile Include="client\random.cpp" />
+    <ClCompile Include="client\sha256.cpp" />
+    <ClCompile Include="client\StateManager.cpp" />
     <ClCompile Include="client\wall.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,17 +181,45 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animatedGIF.h" />
+    <ClInclude Include="client\Chatbox.h" />
+    <ClInclude Include="client\client_interface.hpp" />
     <ClInclude Include="client\enemy.h" />
     <ClInclude Include="client\entity.h" />
+    <ClInclude Include="client\Game.hpp" />
+    <ClInclude Include="client\GamePlay.hpp" />
     <ClInclude Include="client\ingameText.h" />
+    <ClInclude Include="client\Inputbox.h" />
     <ClInclude Include="client\item.h" />
+    <ClInclude Include="client\MainMenu.hpp" />
+    <ClInclude Include="client\net.hpp" />
     <ClInclude Include="client\player.h" />
     <ClInclude Include="client\projectile.h" />
     <ClInclude Include="client\random.h" />
+    <ClInclude Include="client\sha256.h" />
+    <ClInclude Include="client\State.hpp" />
+    <ClInclude Include="client\StateManager.hpp" />
     <ClInclude Include="client\stb_image.h" />
     <ClInclude Include="client\wall.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\boost.1.76.0.0\build\boost.targets" Condition="Exists('packages\boost.1.76.0.0\build\boost.targets')" />
+    <Import Project="packages\boost_date_time-vc142.1.76.0.0\build\boost_date_time-vc142.targets" Condition="Exists('packages\boost_date_time-vc142.1.76.0.0\build\boost_date_time-vc142.targets')" />
+    <Import Project="packages\boost_thread-vc142.1.76.0.0\build\boost_thread-vc142.targets" Condition="Exists('packages\boost_thread-vc142.1.76.0.0\build\boost_thread-vc142.targets')" />
+    <Import Project="packages\boost_chrono-vc142.1.76.0.0\build\boost_chrono-vc142.targets" Condition="Exists('packages\boost_chrono-vc142.1.76.0.0\build\boost_chrono-vc142.targets')" />
+    <Import Project="packages\boost_serialization-vc142.1.76.0.0\build\boost_serialization-vc142.targets" Condition="Exists('packages\boost_serialization-vc142.1.76.0.0\build\boost_serialization-vc142.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\boost.1.76.0.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost.1.76.0.0\build\boost.targets'))" />
+    <Error Condition="!Exists('packages\boost_date_time-vc142.1.76.0.0\build\boost_date_time-vc142.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_date_time-vc142.1.76.0.0\build\boost_date_time-vc142.targets'))" />
+    <Error Condition="!Exists('packages\boost_thread-vc142.1.76.0.0\build\boost_thread-vc142.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_thread-vc142.1.76.0.0\build\boost_thread-vc142.targets'))" />
+    <Error Condition="!Exists('packages\boost_chrono-vc142.1.76.0.0\build\boost_chrono-vc142.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_chrono-vc142.1.76.0.0\build\boost_chrono-vc142.targets'))" />
+    <Error Condition="!Exists('packages\boost_serialization-vc142.1.76.0.0\build\boost_serialization-vc142.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\boost_serialization-vc142.1.76.0.0\build\boost_serialization-vc142.targets'))" />
+  </Target>
 </Project>

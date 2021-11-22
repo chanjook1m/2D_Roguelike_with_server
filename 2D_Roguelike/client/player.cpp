@@ -22,39 +22,40 @@ void Player::update()
 {
     move();
 	sprite.setPosition(collisionRect.getPosition());
+    text.setPosition(collisionRect.getPosition().x - 5, collisionRect.getPosition().y - 30);
 }
 
 void Player::move()
 {
     if (isMainPlayer)
     {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up) && canMoveUp)
+        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || virtualKeyPressed == 1) && canMoveUp)
         {
-            //collisionRect.move(0.f, -velocity);
+            collisionRect.move(0.f, -velocity/30);
             sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth, spriteHeight * 1, spriteWidth, spriteHeight));
             direction = 1;
             updated = true;
 
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down) && canMoveDown)
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || virtualKeyPressed == 2) && canMoveDown)
         {
-            //collisionRect.move(0.f, velocity);
+            collisionRect.move(0.f, velocity/30);
             sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth, 0, spriteWidth, spriteHeight));
             direction = 2;
             updated = true;
 
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) && canMoveLeft)
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || virtualKeyPressed == 3) && canMoveLeft)
         {
-            //collisionRect.move(-velocity, 0.f);
+            collisionRect.move(-velocity/30, 0.f);
             sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth, spriteHeight * 2, spriteWidth, spriteHeight));
             direction = 3;
             updated = true;
 
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) && canMoveRight)
+        else if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || virtualKeyPressed == 4) && canMoveRight)
         {
-            //collisionRect.move(velocity, 0.f);
+            collisionRect.move(velocity/30, 0.f);
             sprite.setTextureRect(sf::IntRect(walkSpriteNumber * spriteWidth, spriteHeight * 3, spriteWidth, spriteHeight));
             direction = 4;
             updated = true;
@@ -66,7 +67,11 @@ void Player::move()
             canMoveDown = true;
             canMoveLeft = true;
             canMoveRight = true;
-        }
+            updated = false;
+            direction = 0;
+            //virtualKeyPressed = false;
+        }   
+        
     }
     else
     {
@@ -108,6 +113,8 @@ void Player::move()
             canMoveDown = true;
             canMoveLeft = true;
             canMoveRight = true;
+            updated = false;
+            
         }
     }
     

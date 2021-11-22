@@ -4,6 +4,9 @@
 
 2D Roguelike game written in C++ with login, chat, game server
 
+![in_game](https://user-images.githubusercontent.com/27846824/142897089-9652300b-84ad-4e4a-a5e9-8bffcae751eb.gif)
+
+
 ## Dependencies
 - boost, boost_chrono, boost_date_time, boost_serialization, boost_thread
 - cereal

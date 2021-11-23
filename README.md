@@ -32,7 +32,7 @@
 | 2D_Roguelike/client/animatedGIF.hpp,.cpp | Change GIF to sprite |
 | 2D_Roguelike/client/random.hpp,.cpp | Perform randomized calculation |
 | 2D_Roguelike/client/client_interface.hpp | Interface for communication with server |
-| 2D_Roguelike/client/net.hpp | Include Classes and functions used in client_interface.hpp |
+| 2D_Roguelike/client/net.hpp | Include Classes and functions used in client_interface |
 | Server_1 | Chat server |
 | Server_2 | Login server |
 | Server_3 | Game server |
